@@ -2,8 +2,8 @@
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
 // @version      1.0.0
-// @updateURL    https://usafanthonyperry-spec.github.io/-ffb-lineup-check/FFB_Lineup_Check.meta.js
-// @downloadURL  https://usafanthonyperry-spec.github.io/-ffb-lineup-check/FFB_Lineup_Check.user.js
+// @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
+// @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
 // @match        https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/*
 // @run-at       document-idle
