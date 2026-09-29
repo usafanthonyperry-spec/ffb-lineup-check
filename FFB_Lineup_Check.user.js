@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.5
+// @version      1.0.6
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -267,14 +267,29 @@
     const starts = suggested.filter(x => !currentMap.has(x.player));
     const sits = current.filter(x => !suggestedMap.has(x.player));
 
-    // Build the instructions from the OPTIMIZED SLOT itself rather than
-    // trying to pair starters and bench players. This makes the result an
-    // exact target lineup: RB 1 -> Player, WR 2 -> Player, FLEX 1 -> Player.
+    const samePlayersInSlotGroup = slot => {
+      const currentPlayers = current
+        .filter(x => x.slot === slot)
+        .map(x => x.player)
+        .sort();
+      const suggestedPlayers = suggested
+        .filter(x => x.slot === slot)
+        .map(x => x.player)
+        .sort();
+
+      return currentPlayers.length === suggestedPlayers.length
+        && currentPlayers.every((player, index) => player === suggestedPlayers[index]);
+    };
+
+    // Build instructions from the optimized slot, but ignore meaningless
+    // re-ordering inside identical slot types. WR 1 <-> WR 2, RB 1 <-> RB 2,
+    // FLEX 1 <-> FLEX 2, etc. do not change the actual starting lineup.
     const slotChanges = suggested
       .map(target => {
         const key = target.slotKey || target.slot;
         const previous = currentBySlot.get(key) || null;
         if (previous?.player === target.player) return null;
+        if (samePlayersInSlotGroup(target.slot)) return null;
 
         return {
           slot: target.slotLabel || target.slot,
