@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.7
+// @version      1.0.8
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -23,6 +23,11 @@
   // For a generic/public copy, set this to: const LEAGUE_ORDER = [];
   // =========================================================
   const LEAGUE_ORDER = [];
+
+  const APP_VERSION = '1.0.8';
+  const VERSION_INFO_URL = 'https://raw.githubusercontent.com/usafanthonyperry-spec/ffb-lineup-check/main/version.json';
+  const UPDATE_URL = 'https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js';
+  const VERSION_STORAGE_KEY = 'ffb-public-last-version';
 
   const COLORS = {
     bg: '#111315',
@@ -47,6 +52,79 @@
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#039;');
+  }
+
+  function compareVersions(a, b) {
+    const pa = String(a || '').split('.').map(n => Number.parseInt(n, 10) || 0);
+    const pb = String(b || '').split('.').map(n => Number.parseInt(n, 10) || 0);
+    const len = Math.max(pa.length, pb.length);
+
+    for (let i = 0; i < len; i++) {
+      const diff = (pa[i] || 0) - (pb[i] || 0);
+      if (diff !== 0) return diff;
+    }
+    return 0;
+  }
+
+  async function getVersionNotice() {
+    let previousVersion = '';
+    try {
+      previousVersion = localStorage.getItem(VERSION_STORAGE_KEY) || '';
+    } catch (_) {}
+
+    let remoteVersion = '';
+    let updateUrl = UPDATE_URL;
+
+    try {
+      const response = await fetch(VERSION_INFO_URL, { cache: 'no-store' });
+      if (response.ok) {
+        const info = await response.json();
+        remoteVersion = String(info.version || '').trim();
+        updateUrl = String(info.updateUrl || UPDATE_URL).trim() || UPDATE_URL;
+      }
+    } catch (_) {
+      // Version checking should never stop the lineup checker.
+    }
+
+    let notice = null;
+
+    if (remoteVersion && compareVersions(remoteVersion, APP_VERSION) > 0) {
+      notice = {
+        type: 'update',
+        currentVersion: APP_VERSION,
+        remoteVersion,
+        updateUrl
+      };
+    } else if (previousVersion && previousVersion !== APP_VERSION && compareVersions(APP_VERSION, previousVersion) > 0) {
+      notice = {
+        type: 'updated',
+        currentVersion: APP_VERSION
+      };
+    }
+
+    try {
+      localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION);
+    } catch (_) {}
+
+    return notice;
+  }
+
+  function renderVersionNotice(notice) {
+    if (!notice) return '';
+
+    if (notice.type === 'update') {
+      return `
+        <div style="margin-top:12px;padding:12px;background:#3a3214;border:1px solid ${COLORS.yellow};border-radius:10px;">
+          <div style="font-weight:700;color:${COLORS.yellow};">⬆️ Update available — v${escapeHTML(notice.remoteVersion)}</div>
+          <div style="margin-top:4px;color:${COLORS.muted};">You’re using v${escapeHTML(notice.currentVersion)}.</div>
+          <a href="${escapeHTML(notice.updateUrl)}" style="display:block;margin-top:9px;padding:10px 12px;border-radius:9px;background:${COLORS.purple};color:#fff;text-decoration:none;text-align:center;font-weight:700;">Tap to Update</a>
+        </div>`;
+    }
+
+    return `
+      <div style="margin-top:12px;padding:10px 12px;background:${COLORS.card2};border:1px solid ${COLORS.green};border-radius:10px;color:${COLORS.green};font-weight:700;">
+        ✅ Updated to v${escapeHTML(notice.currentVersion)}
+      </div>`;
   }
 
   function normalizeLeagueName(value) {
@@ -645,7 +723,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.7', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.8', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
 
@@ -893,6 +971,8 @@
     window.__ffbLineupCheckRunning = false;
   }
 
+  const versionNotice = await getVersionNotice();
+
   try {
     showBanner('🏈 Loading Fantasy Dashboard…');
     await sleep(750);
@@ -1042,9 +1122,10 @@
     }
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.7</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.8</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
-      ${headerStatus}`;
+      ${headerStatus}
+      ${renderVersionNotice(versionNotice)}`;
 
     for (const league of sortedLeagueResults) html += renderLeagueCard(league);
 
