@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.9
+// @version      1.0.10
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
 // @match        https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/*
 // @run-at       document-idle
-// @grant        none
+// @inject-into  content
+// @grant        GM.xmlHttpRequest
 // @noframes
 // ==/UserScript==
 
@@ -24,7 +25,7 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.9';
+  const APP_VERSION = '1.0.10';
   const VERSION_INFO_URL = 'https://raw.githubusercontent.com/usafanthonyperry-spec/ffb-lineup-check/main/version.json';
   const UPDATE_URL = 'https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
@@ -76,9 +77,11 @@
     let updateUrl = UPDATE_URL;
 
     try {
-      const response = await fetch(VERSION_INFO_URL, { cache: 'no-store' });
-      if (response.ok) {
-        const info = await response.json();
+      // Use the Userscripts privileged request API so the version check is
+      // not blocked by the Fantasy Footballers site's CSP/cross-origin rules.
+      const response = await GM.xmlHttpRequest({ url: VERSION_INFO_URL });
+      if (response.status >= 200 && response.status < 300) {
+        const info = JSON.parse(response.responseText || '{}');
         remoteVersion = String(info.version || '').trim();
         updateUrl = String(info.updateUrl || UPDATE_URL).trim() || UPDATE_URL;
       }
@@ -723,7 +726,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.9', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.10', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
 
@@ -1122,7 +1125,7 @@
     }
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.9</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.10</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       ${headerStatus}
       ${renderVersionNotice(versionNotice)}`;
