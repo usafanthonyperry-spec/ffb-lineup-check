@@ -1,0 +1,1063 @@
+// ==UserScript==
+// @name         FFB Fantasy Lineup Check — Perry
+// @namespace    local.ffb.lineupcheck.perry
+// @version      1.0.1
+// @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.meta.js
+// @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.user.js
+// @description  Perry personal FFB lineup checker with custom league order, lineup/FLEX/SFLEX fixes, Spot Starts, and shareable results.
+// @match        https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/*
+// @run-at       document-idle
+// @grant        none
+// @noframes
+// ==/UserScript==
+
+(async function () {
+  'use strict';
+
+  if (window.__ffbLineupCheckRunning) return;
+  window.__ffbLineupCheckRunning = true;
+
+  // =========================================================
+  // OPTIONAL CUSTOM LEAGUE ORDER / DISPLAY NAMES
+  // Move these lines when you reorder leagues.
+  // For a generic/public copy, set this to: const LEAGUE_ORDER = [];
+  // =========================================================
+  const LEAGUE_ORDER = [
+    'Eglin fAMMOly',
+    'Family League',
+    'Tried and TRUE',
+    'QA',
+    'League of Record Dino',
+    'Dynasty Degenerates',
+    'Dino Jr',
+    'The Swim Shady',
+    'The Megalabowl',
+    'Astro Bot',
+    'Off With Their Heads'
+  ];
+
+  const COLORS = {
+    bg: '#111315',
+    card: '#1b1e21',
+    card2: '#23272b',
+    border: '#343a40',
+    text: '#f4f4f4',
+    muted: '#a7adb4',
+    green: '#54d17a',
+    red: '#ff6b6b',
+    yellow: '#f2c94c',
+    purple: '#7c5cff',
+    blue: '#66aaff'
+  };
+
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  function escapeHTML(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function normalizeLeagueName(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .replace(/\s+/g, ' ');
+  }
+
+  function configuredLeagueMatch(name) {
+    const actual = normalizeLeagueName(name);
+    if (!actual) return null;
+
+    for (let i = 0; i < LEAGUE_ORDER.length; i++) {
+      const label = LEAGUE_ORDER[i];
+      const wanted = normalizeLeagueName(label);
+      if (!wanted) continue;
+      if (actual === wanted || actual.includes(wanted) || wanted.includes(actual)) {
+        return { index: i, label };
+      }
+    }
+    return null;
+  }
+
+  function applyConfiguredOrder(results) {
+    if (!LEAGUE_ORDER.length) return results;
+
+    // Only activate this user's custom order if at least two league names match.
+    // That keeps the same script safe to hand to friends whose leagues are different.
+    const matchCount = results.filter(r => configuredLeagueMatch(r.rawLeague || r.league)).length;
+    if (matchCount < 2) return results;
+
+    return results
+      .map((league, originalIndex) => {
+        const match = configuredLeagueMatch(league.rawLeague || league.league);
+        return {
+          league: {
+            ...league,
+            league: match?.label || league.league
+          },
+          originalIndex,
+          orderIndex: match?.index ?? 10000
+        };
+      })
+      .sort((a, b) => (a.orderIndex - b.orderIndex) || (a.originalIndex - b.originalIndex))
+      .map(x => x.league);
+  }
+
+  function showBanner(message) {
+    let banner = document.getElementById('ffb-check-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'ffb-check-banner';
+      Object.assign(banner.style, {
+        position: 'fixed',
+        top: '14px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: '999999',
+        background: COLORS.bg,
+        color: COLORS.text,
+        padding: '11px 15px',
+        borderRadius: '12px',
+        border: `1px solid ${COLORS.border}`,
+        fontSize: '15px',
+        fontWeight: '600',
+        maxWidth: '90%',
+        textAlign: 'center',
+        boxShadow: '0 6px 20px rgba(0,0,0,.4)',
+        fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif'
+      });
+      document.body.appendChild(banner);
+    }
+    banner.textContent = message;
+  }
+
+  function removeBanner() {
+    document.getElementById('ffb-check-banner')?.remove();
+  }
+
+  function getTeamSelect() {
+    return document.querySelector('.ffb-ultimate-dashboard--team select') || document.querySelector('select');
+  }
+
+  function extractJSONObjectAfter(text, marker) {
+    const markerIndex = text.indexOf(marker);
+    if (markerIndex === -1) return null;
+
+    const start = text.indexOf('{', markerIndex + marker.length);
+    if (start === -1) return null;
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let i = start; i < text.length; i++) {
+      const ch = text[i];
+
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (ch === '\\') escaped = true;
+        else if (ch === '"') inString = false;
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+        continue;
+      }
+
+      if (ch === '{') depth++;
+      if (ch === '}') {
+        depth--;
+        if (depth === 0) return text.slice(start, i + 1);
+      }
+    }
+    return null;
+  }
+
+  let scoringSystemsCache;
+
+  function getScoringSystems() {
+    if (scoringSystemsCache !== undefined) return scoringSystemsCache;
+
+    try {
+      if (window.udk?.userScoringSystems) {
+        scoringSystemsCache = window.udk.userScoringSystems;
+        return scoringSystemsCache;
+      }
+    } catch (_) {}
+
+    for (const script of document.scripts) {
+      const text = script.textContent || '';
+      if (!text.includes('window.udk.userScoringSystems')) continue;
+
+      const raw = extractJSONObjectAfter(text, 'window.udk.userScoringSystems');
+      if (!raw) continue;
+
+      try {
+        scoringSystemsCache = JSON.parse(raw);
+        return scoringSystemsCache;
+      } catch (_) {}
+    }
+
+    scoringSystemsCache = {};
+    return scoringSystemsCache;
+  }
+
+  function getTeamMeta(select) {
+    const systems = getScoringSystems();
+    const value = select?.value || '';
+    const visibleName = select?.selectedOptions?.[0]?.text?.trim() || '';
+
+    if (systems[value]) return systems[value];
+
+    return Object.values(systems).find(item =>
+      item?.id === value || item?.name === visibleName
+    ) || null;
+  }
+
+  function getRawLeagueName(select) {
+    const meta = getTeamMeta(select);
+    return meta?.leagueName?.trim()
+      || meta?.name?.trim()
+      || select?.selectedOptions?.[0]?.text?.trim()
+      || 'Unknown League';
+  }
+
+  function getCurrentSleeperURL() {
+    const link = Array.from(document.querySelectorAll('a')).find(a =>
+      /View in Sleeper/i.test(a.innerText || '')
+    );
+    return link?.href || '';
+  }
+
+  function getLineup(type) {
+    const roster = document.querySelector(`.ffb-lineup-optimizer--roster#${type}`);
+    if (!roster) return [];
+
+    return Array.from(roster.querySelectorAll(
+      '.ffb-lineup-optimizer--starters .ffb-lineup-optimizer--row:not(.header):not(.total)'
+    ))
+      .map(row => ({
+        slot: row.querySelector('.position')?.innerText.trim() || '',
+        player: row.querySelector('.player-name')?.innerText.trim() || '',
+        kickoff: row.querySelector('.player-right-line-two span')?.innerText.trim() || ''
+      }))
+      .filter(x => x.slot && x.player);
+  }
+
+  function getLineupChanges(current, suggested) {
+    const currentMap = new Map(current.map(x => [x.player, x]));
+    const suggestedMap = new Map(suggested.map(x => [x.player, x]));
+
+    const starts = suggested.filter(x => !currentMap.has(x.player));
+    const sits = current.filter(x => !suggestedMap.has(x.player));
+    const flexMoves = [];
+    const flexSlots = new Set(['FLEX', 'SFLEX']);
+
+    // Record every real slot change involving FLEX/SFLEX.
+    // This catches multi-player chains such as WR → FLEX → RB instead of
+    // incorrectly pretending an RB directly replaces a WR.
+    for (const suggestedPlayer of suggested) {
+      const currentPlayer = currentMap.get(suggestedPlayer.player);
+      if (!currentPlayer) continue;
+      if (currentPlayer.slot === suggestedPlayer.slot) continue;
+      if (!flexSlots.has(currentPlayer.slot) && !flexSlots.has(suggestedPlayer.slot)) continue;
+
+      flexMoves.push({
+        player: suggestedPlayer.player,
+        from: currentPlayer.slot,
+        to: suggestedPlayer.slot,
+        kickoff: suggestedPlayer.kickoff
+      });
+    }
+
+    return { starts, sits, flexMoves };
+  }
+
+  function pairLineupChanges(starts, sits) {
+    const remaining = [...sits];
+    const pairs = [];
+
+    for (const start of starts) {
+      // Only draw a direct START → BENCH arrow when the two players occupy
+      // the same lineup slot. Never fabricate a cross-position replacement.
+      const index = remaining.findIndex(sit => sit.slot === start.slot);
+      const bench = index >= 0 ? remaining.splice(index, 1)[0] : null;
+      pairs.push({ start, bench });
+    }
+
+    for (const bench of remaining) pairs.push({ start: null, bench });
+    return pairs;
+  }
+
+  function parseSpotPlayer(el) {
+    if (!el) return null;
+
+    const score = Number.parseFloat(el.querySelector('.score')?.innerText.trim() || '');
+
+    return {
+      position: el.querySelector('.position')?.innerText.trim() || '',
+      player: el.querySelector('.player-name')?.innerText.trim() || '',
+      score: Number.isFinite(score) ? score : null,
+      kickoff: el.querySelector('.player-right-line-two span')?.innerText.trim() || ''
+    };
+  }
+
+  function getSpotStarts() {
+    const grid = document.querySelector('#spot-starts .ffb-spot-starts--grid');
+    if (!grid) return [];
+
+    const rows = Array.from(grid.children)
+      .filter(el => el.classList.contains('ffb-spot-starts--row'))
+      .slice(1);
+
+    const recommendations = [];
+
+    for (const row of rows) {
+      const cols = Array.from(row.children)
+        .filter(el => el.classList.contains('ffb-spot-starts--col'));
+
+      const rosterCol = cols.find(el => el.classList.contains('roster'));
+      const suggestedCol = cols.find(el => el.classList.contains('suggested'));
+
+      const current = parseSpotPlayer(rosterCol?.querySelector('.ffb-spot-starts--player'));
+      const options = Array.from(suggestedCol?.querySelectorAll('.ffb-spot-starts--player') || [])
+        .map(parseSpotPlayer)
+        .filter(Boolean);
+
+      if (!current?.player || !options.length) continue;
+
+      const best = options.reduce((a, b) => {
+        if (a?.score == null) return b;
+        if (b?.score == null) return a;
+        return b.score > a.score ? b : a;
+      }, options[0]);
+
+      const delta = current.score != null && best.score != null
+        ? best.score - current.score
+        : null;
+
+      recommendations.push({ current, add: best, delta });
+    }
+
+    return recommendations;
+  }
+
+  function optimizerUnavailable() {
+    const text = document.body.innerText || '';
+    return /collecting data/i.test(text)
+      || /rankings are currently in progress/i.test(text)
+      || /lineup optimizer.*not.*available/i.test(text);
+  }
+
+  function getOptimizerStatusText() {
+    const candidates = Array.from(document.querySelectorAll('section, article, div'))
+      .map(el => ({
+        text: (el.innerText || '').replace(/\n{3,}/g, '\n\n').trim()
+      }))
+      .filter(item =>
+        item.text
+        && /collecting data/i.test(item.text)
+        && /rankings/i.test(item.text)
+        && item.text.length <= 700
+      )
+      .sort((a, b) => a.text.length - b.text.length);
+
+    if (candidates.length) {
+      const text = candidates[0].text.replace(/^collecting data\s*/i, '').trim();
+      if (text) return text;
+    }
+
+    return 'Fantasy Footballers has not posted the current Lineup Optimizer rankings yet.';
+  }
+
+  function createResultsBox() {
+    document.getElementById('ffb-final-results')?.remove();
+
+    const results = document.createElement('div');
+    results.id = 'ffb-final-results';
+
+    Object.assign(results.style, {
+      position: 'fixed',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      zIndex: '999999',
+      background: COLORS.bg,
+      color: COLORS.text,
+      width: '88%',
+      maxWidth: '520px',
+      maxHeight: '78vh',
+      overflowY: 'auto',
+      padding: '18px',
+      borderRadius: '16px',
+      border: `1px solid ${COLORS.border}`,
+      boxShadow: '0 12px 40px rgba(0,0,0,.55)',
+      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+      fontSize: '15px',
+      lineHeight: '1.4'
+    });
+
+    return results;
+  }
+
+  function makeButton(text, background) {
+    const button = document.createElement('button');
+    button.textContent = text;
+    Object.assign(button.style, {
+      width: '100%',
+      marginTop: '10px',
+      padding: '12px',
+      fontSize: '15px',
+      fontWeight: '600',
+      borderRadius: '10px',
+      border: `1px solid ${COLORS.border}`,
+      background,
+      color: COLORS.text
+    });
+    return button;
+  }
+
+  function renderLeagueCard(league) {
+    if (league.status === 'optimized') {
+      return `
+        <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:12px;">
+          <div style="font-weight:700;margin-bottom:8px;">${escapeHTML(league.league)}</div>
+          <div style="color:${COLORS.green};font-weight:700;">✓ OPTIMIZED</div>
+          <div style="margin-top:3px;color:${COLORS.muted};">No lineup or Spot Starts changes needed.</div>
+        </div>`;
+    }
+
+    if (league.status === 'error') {
+      return `
+        <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:12px;">
+          <div style="font-weight:700;margin-bottom:8px;">${escapeHTML(league.league)}</div>
+          <div style="color:${COLORS.yellow};font-weight:700;">COULDN'T VERIFY</div>
+          <div style="margin-top:3px;color:${COLORS.muted};">${escapeHTML(league.error || 'Could not read lineup.')}</div>
+        </div>`;
+    }
+
+    const pairs = pairLineupChanges(league.starts, league.sits);
+    let html = `
+      <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:12px;">
+        <div style="font-weight:700;margin-bottom:8px;">${escapeHTML(league.league)}</div>`;
+
+    if (pairs.length || league.flexMoves.length) {
+      html += `<div style="color:${COLORS.muted};font-weight:600;margin-bottom:4px;">LINEUP</div>`;
+
+      for (const pair of pairs) {
+        html += `<div style="margin-top:6px;font-size:15px;line-height:1.45;">`;
+
+        if (pair.start) {
+          html += `<span style="color:${COLORS.green};font-weight:700;">START</span>&nbsp;${escapeHTML(pair.start.player)} <span style="color:${COLORS.muted};">(${escapeHTML(pair.start.slot)})</span>`;
+        }
+
+        if (pair.start && pair.bench) {
+          html += `<span style="color:${COLORS.muted};">&nbsp;→&nbsp;</span>`;
+        }
+
+        if (pair.bench) {
+          html += `<span style="color:${COLORS.red};font-weight:700;">BENCH</span>&nbsp;${escapeHTML(pair.bench.player)} <span style="color:${COLORS.muted};">(${escapeHTML(pair.bench.slot)})</span>`;
+        }
+
+        html += `</div>`;
+      }
+
+      for (const move of league.flexMoves) {
+        html += `
+          <div style="margin-top:8px;"><span style="color:${COLORS.blue};font-weight:700;">FLEX</span>&nbsp; Move ${escapeHTML(move.player)}: ${escapeHTML(move.from)} → ${escapeHTML(move.to)}${move.kickoff ? ` • ${escapeHTML(move.kickoff)}` : ''}</div>`;
+      }
+    }
+
+    if (league.spotStarts.length) {
+      html += `<div style="color:${COLORS.muted};font-weight:600;margin-top:${(pairs.length || league.flexMoves.length) ? '12px' : '0'};margin-bottom:4px;">SPOT STARTS</div>`;
+
+      for (const rec of league.spotStarts) {
+        const deltaText = rec.delta != null ? `+${rec.delta.toFixed(1)} pts` : '';
+        const verb = ['D', 'K'].includes(rec.current.position) ? 'REPLACE' : 'START OVER';
+
+        html += `
+          <div style="margin-top:6px;"><span style="color:${COLORS.green};font-weight:700;">ADD</span>&nbsp;${escapeHTML(rec.add.player)} <span style="color:${COLORS.muted};">(${escapeHTML(rec.add.position)})</span></div>
+          <div style="margin-top:2px;color:${COLORS.muted};">${verb} ${escapeHTML(rec.current.player)}${deltaText ? ` • ${escapeHTML(deltaText)}` : ''}</div>`;
+      }
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  // =========================================================
+  // SHARE IMAGE
+  // =========================================================
+
+  function roundedRect(ctx, x, y, w, h, r, fill, stroke) {
+    const radius = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + w, y, x + w, y + h, radius);
+    ctx.arcTo(x + w, y + h, x, y + h, radius);
+    ctx.arcTo(x, y + h, x, y, radius);
+    ctx.arcTo(x, y, x + w, y, radius);
+    ctx.closePath();
+
+    if (fill) {
+      ctx.fillStyle = fill;
+      ctx.fill();
+    }
+    if (stroke) {
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  function wrapCanvasText(ctx, text, maxWidth) {
+    const words = String(text).split(/\s+/).filter(Boolean);
+    if (!words.length) return [''];
+
+    const lines = [];
+    let line = words[0];
+
+    for (let i = 1; i < words.length; i++) {
+      const test = `${line} ${words[i]}`;
+      if (ctx.measureText(test).width <= maxWidth) line = test;
+      else {
+        lines.push(line);
+        line = words[i];
+      }
+    }
+    lines.push(line);
+    return lines;
+  }
+
+  function dataURLToFile(dataURL, filename) {
+    const [header, data] = dataURL.split(',');
+    const mime = header.match(/data:([^;]+)/)?.[1] || 'image/png';
+    const binary = atob(data);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new File([bytes], filename, { type: mime });
+  }
+
+  function buildShareImage(model) {
+    const W = 720;
+    const SCALE = 2;
+    const PAD = 34;
+    const CARD_PAD = 22;
+    const INNER_W = W - PAD * 2;
+
+    const estimated = 650 + model.leagues.reduce((sum, league) => {
+      if (league.status === 'optimized' || league.status === 'error') return sum + 190;
+      const pairs = pairLineupChanges(league.starts, league.sits).length;
+      const items = pairs + league.flexMoves.length + league.spotStarts.length;
+      return sum + 220 + items * 95;
+    }, 0) + model.globalErrors.length * 60;
+
+    const scratch = document.createElement('canvas');
+    scratch.width = W * SCALE;
+    scratch.height = Math.max(1200, estimated) * SCALE;
+
+    const ctx = scratch.getContext('2d');
+    ctx.scale(SCALE, SCALE);
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = COLORS.bg;
+    ctx.fillRect(0, 0, W, scratch.height / SCALE);
+
+    let y = PAD;
+
+    const setFont = (weight, size) => {
+      ctx.font = `${weight} ${size}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+    };
+
+    const drawWrapped = (text, x, maxWidth, color, weight = 400, size = 22, lineHeight = 30) => {
+      setFont(weight, size);
+      ctx.fillStyle = color;
+      const lines = wrapCanvasText(ctx, text, maxWidth);
+      for (const line of lines) {
+        ctx.fillText(line, x, y);
+        y += lineHeight;
+      }
+    };
+
+    const drawInlineSegments = (segments, x, maxWidth, size = 21, lineHeight = 30) => {
+      let cursorX = x;
+      let lineY = y;
+
+      for (const seg of segments) {
+        const words = String(seg.text).split(/(\s+)/).filter(Boolean);
+        for (const word of words) {
+          setFont(seg.weight || 400, size);
+          const width = ctx.measureText(word).width;
+
+          if (cursorX + width > x + maxWidth && word.trim()) {
+            cursorX = x;
+            lineY += lineHeight;
+          }
+
+          ctx.fillStyle = seg.color || COLORS.text;
+          ctx.fillText(word, cursorX, lineY);
+          cursorX += width;
+        }
+      }
+
+      y = lineY + lineHeight;
+    };
+
+    const attentionCount = model.leagues.filter(x => x.status === 'attention').length;
+    const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
+    const errorCount = model.leagues.filter(x => x.status === 'error').length;
+
+    drawWrapped('🏈 Fantasy Lineup Check', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    y += 6;
+    drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
+
+    if (attentionCount) {
+      drawWrapped(`${attentionCount} need attention • ${optimizedCount} optimized${errorCount ? ` • ${errorCount} couldn't verify` : ''}`, PAD, INNER_W, COLORS.yellow, 700, 21, 30);
+    } else if (errorCount) {
+      drawWrapped(`${optimizedCount} optimized • ${errorCount} couldn't verify`, PAD, INNER_W, COLORS.yellow, 700, 21, 30);
+    } else {
+      drawWrapped(`All ${optimizedCount} leagues optimized`, PAD, INNER_W, COLORS.green, 700, 21, 30);
+    }
+
+    y += 18;
+
+    for (const league of model.leagues) {
+      const cardStart = y;
+      const contentX = PAD + CARD_PAD;
+      const contentW = INNER_W - CARD_PAD * 2;
+
+      if (league.status === 'optimized') {
+        const cardH = 145;
+        roundedRect(ctx, PAD, y, INNER_W, cardH, 18, COLORS.card, COLORS.border);
+        y += CARD_PAD;
+        drawWrapped(league.league, contentX, contentW, COLORS.text, 700, 24, 32);
+        y += 5;
+        drawWrapped('✓ OPTIMIZED', contentX, contentW, COLORS.green, 700, 20, 29);
+        drawWrapped('No lineup or Spot Starts changes needed.', contentX, contentW, COLORS.muted, 400, 18, 26);
+        y = Math.max(y + CARD_PAD, cardStart + cardH) + 18;
+        continue;
+      }
+
+      if (league.status === 'error') {
+        const cardH = 145;
+        roundedRect(ctx, PAD, y, INNER_W, cardH, 18, COLORS.card, COLORS.border);
+        y += CARD_PAD;
+        drawWrapped(league.league, contentX, contentW, COLORS.text, 700, 24, 32);
+        y += 5;
+        drawWrapped("COULDN'T VERIFY", contentX, contentW, COLORS.yellow, 700, 20, 29);
+        drawWrapped(league.error || 'Could not read lineup.', contentX, contentW, COLORS.muted, 400, 18, 26);
+        y = Math.max(y + CARD_PAD, cardStart + cardH) + 18;
+        continue;
+      }
+
+      const pairs = pairLineupChanges(league.starts, league.sits);
+      const itemCount = pairs.length + league.flexMoves.length + league.spotStarts.length;
+      const roughCardH = 130 + itemCount * 85;
+
+      roundedRect(ctx, PAD, y, INNER_W, roughCardH, 18, COLORS.card, COLORS.border);
+      y += CARD_PAD;
+      drawWrapped(league.league, contentX, contentW, COLORS.text, 700, 24, 32);
+      y += 8;
+
+      if (pairs.length || league.flexMoves.length) {
+        drawWrapped('LINEUP', contentX, contentW, COLORS.muted, 700, 18, 26);
+        y += 2;
+
+        for (const pair of pairs) {
+          const segments = [];
+
+          if (pair.start) {
+            segments.push({ text: 'START ', color: COLORS.green, weight: 700 });
+            segments.push({ text: `${pair.start.player} (${pair.start.slot})`, color: COLORS.text, weight: 400 });
+          }
+
+          if (pair.start && pair.bench) {
+            segments.push({ text: '  →  ', color: COLORS.muted, weight: 400 });
+          }
+
+          if (pair.bench) {
+            segments.push({ text: 'BENCH ', color: COLORS.red, weight: 700 });
+            segments.push({ text: `${pair.bench.player} (${pair.bench.slot})`, color: COLORS.text, weight: 400 });
+          }
+
+          drawInlineSegments(segments, contentX, contentW, 20, 29);
+          y += 4;
+        }
+
+        for (const move of league.flexMoves) {
+          drawInlineSegments([
+            { text: 'FLEX ', color: COLORS.blue, weight: 700 },
+            { text: `Move ${move.player}: ${move.from} → ${move.to}${move.kickoff ? ` • ${move.kickoff}` : ''}`, color: COLORS.text, weight: 400 }
+          ], contentX, contentW, 20, 29);
+          y += 5;
+        }
+      }
+
+      if (league.spotStarts.length) {
+        if (pairs.length || league.flexMoves.length) y += 5;
+        drawWrapped('SPOT STARTS', contentX, contentW, COLORS.muted, 700, 18, 26);
+        y += 2;
+
+        for (const rec of league.spotStarts) {
+          const delta = rec.delta != null ? `+${rec.delta.toFixed(1)} pts` : '';
+          const verb = ['D', 'K'].includes(rec.current.position) ? 'REPLACE' : 'START OVER';
+
+          drawInlineSegments([
+            { text: 'ADD ', color: COLORS.green, weight: 700 },
+            { text: `${rec.add.player} (${rec.add.position})`, color: COLORS.text, weight: 400 }
+          ], contentX, contentW, 20, 29);
+
+          drawWrapped(
+            `${verb} ${rec.current.player}${delta ? ` • ${delta}` : ''}`,
+            contentX,
+            contentW,
+            COLORS.muted,
+            400,
+            19,
+            27
+          );
+          y += 5;
+        }
+      }
+
+      const neededBottom = y + CARD_PAD;
+      const roughBottom = cardStart + roughCardH;
+
+      if (neededBottom > roughBottom) {
+        ctx.fillStyle = COLORS.card;
+        ctx.fillRect(PAD + 1, roughBottom - 18, INNER_W - 2, neededBottom - roughBottom + 18);
+      }
+
+      y = Math.max(neededBottom, roughBottom) + 18;
+    }
+
+    if (model.globalErrors.length) {
+      const errorH = 75 + model.globalErrors.length * 32;
+      roundedRect(ctx, PAD, y, INNER_W, errorH, 18, COLORS.card, COLORS.border);
+      y += CARD_PAD;
+      drawWrapped('OTHER ERRORS', PAD + CARD_PAD, INNER_W - CARD_PAD * 2, COLORS.yellow, 700, 20, 29);
+
+      for (const error of model.globalErrors) {
+        drawWrapped(error, PAD + CARD_PAD, INNER_W - CARD_PAD * 2, COLORS.muted, 400, 18, 26);
+      }
+      y += CARD_PAD;
+    }
+
+    y += PAD;
+
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = W * SCALE;
+    finalCanvas.height = Math.ceil(y * SCALE);
+
+    const finalCtx = finalCanvas.getContext('2d');
+    finalCtx.drawImage(
+      scratch,
+      0, 0, finalCanvas.width, finalCanvas.height,
+      0, 0, finalCanvas.width, finalCanvas.height
+    );
+
+    return finalCanvas.toDataURL('image/png');
+  }
+
+  async function shareResults(model, button) {
+    const oldText = button.textContent;
+
+    try {
+      button.textContent = 'Preparing…';
+      button.disabled = true;
+
+      const dataURL = buildShareImage(model);
+      const file = dataURLToFile(dataURL, 'Fantasy-Lineup-Check.png');
+
+      button.textContent = oldText;
+      button.disabled = false;
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] });
+        } catch (error) {
+          if (error?.name !== 'AbortError') console.error('Share failed:', error);
+        }
+        return;
+      }
+
+      const opened = window.open(dataURL, '_blank');
+      if (!opened) location.href = dataURL;
+    } catch (error) {
+      console.error('Share capture failed:', error);
+      button.textContent = 'Share Failed — Try Again';
+      button.disabled = false;
+      setTimeout(() => { button.textContent = oldText; }, 2500);
+    }
+  }
+
+  function addButtons(results, sleeperURL = '', shareModel = null) {
+    if (sleeperURL) {
+      const sleeper = document.createElement('a');
+      sleeper.textContent = 'Open Sleeper';
+      sleeper.href = sleeperURL;
+      Object.assign(sleeper.style, {
+        display: 'block',
+        boxSizing: 'border-box',
+        width: '100%',
+        marginTop: '18px',
+        padding: '12px',
+        textAlign: 'center',
+        fontSize: '15px',
+        fontWeight: '600',
+        borderRadius: '10px',
+        background: COLORS.purple,
+        color: '#fff',
+        textDecoration: 'none'
+      });
+      results.appendChild(sleeper);
+    }
+
+    const rerun = makeButton('🔄 Run Again', COLORS.card2);
+    rerun.onclick = () => location.reload();
+    results.appendChild(rerun);
+
+    const done = makeButton('Done', COLORS.card);
+    done.onclick = () => results.remove();
+    results.appendChild(done);
+
+    if (shareModel) {
+      const share = makeButton('📤 Share Results', COLORS.card2);
+      share.onclick = () => shareResults(shareModel, share);
+      results.appendChild(share);
+    }
+  }
+
+  function showOptimizerUnavailable() {
+    removeBanner();
+    const results = createResultsBox();
+    const siteStatus = getOptimizerStatusText();
+
+    results.innerHTML = `
+      <div style="font-size:18px;font-weight:700;">🕒 Lineup Optimizer Not Ready</div>
+      <div style="margin-top:10px;">Fantasy Footballers is still processing this week's rankings.</div>
+      <div style="margin-top:12px;padding:12px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:10px;color:${COLORS.muted};">${escapeHTML(siteStatus)}</div>`;
+
+    addButtons(results);
+    document.body.appendChild(results);
+    window.__ffbLineupCheckRunning = false;
+  }
+
+  function showLoginError() {
+    removeBanner();
+    const results = createResultsBox();
+
+    results.innerHTML = `
+      <div style="font-size:18px;font-weight:700;">🔐 Footballers Login Required</div>
+      <div style="margin-top:10px;">The Ultimate Dashboard could not be loaded.</div>
+      <div style="margin-top:8px;color:${COLORS.muted};">Sign in, then run Fantasy Lineup Check again.</div>`;
+
+    addButtons(results);
+    document.body.appendChild(results);
+    window.__ffbLineupCheckRunning = false;
+  }
+
+  try {
+    showBanner('🏈 Loading Fantasy Dashboard…');
+    await sleep(750);
+
+    if (optimizerUnavailable()) {
+      showOptimizerUnavailable();
+      return;
+    }
+
+    let select = null;
+
+    for (let i = 0; i < 40; i++) {
+      select = getTeamSelect();
+      if (select && select.options.length > 0) break;
+      await sleep(250);
+    }
+
+    if (!select || select.options.length === 0) {
+      if (optimizerUnavailable()) showOptimizerUnavailable();
+      else showLoginError();
+      return;
+    }
+
+    const teamValues = Array.from(select.options)
+      .filter(option => {
+        const text = option.text.trim();
+        return option.value && !option.disabled && !/select a team/i.test(text);
+      })
+      .map(option => option.value);
+
+    const teamCount = teamValues.length;
+
+    if (!teamCount) {
+      showLoginError();
+      return;
+    }
+
+    const startingTeam = teamValues.includes(select.value) ? select.value : teamValues[0];
+
+    if (select.value !== startingTeam) {
+      select.value = startingTeam;
+      select.dispatchEvent(new Event('input', { bubbles: true }));
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      await sleep(1000);
+    }
+
+    let sleeperURL = getCurrentSleeperURL();
+    const leagueResults = [];
+    const globalErrors = [];
+    let checkedCount = 0;
+
+    for (let i = 0; i < teamCount; i++) {
+      if (optimizerUnavailable()) {
+        showOptimizerUnavailable();
+        return;
+      }
+
+      select = getTeamSelect();
+      if (!select) {
+        globalErrors.push('Team dropdown disappeared.');
+        break;
+      }
+
+      if (select.value !== teamValues[i]) {
+        select.value = teamValues[i];
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        await sleep(1000);
+      }
+
+      select = getTeamSelect();
+      if (!select) {
+        globalErrors.push('Team dropdown disappeared.');
+        break;
+      }
+
+      const rawLeagueName = getRawLeagueName(select);
+      showBanner(`🏈 Checking ${i + 1} of ${teamCount}: ${rawLeagueName}`);
+
+      if (!sleeperURL) sleeperURL = getCurrentSleeperURL();
+
+      const syncButton = Array.from(document.querySelectorAll('button'))
+        .find(b => b.innerText.trim() === 'Sync Team');
+
+      if (syncButton) {
+        syncButton.click();
+        await sleep(2000);
+      }
+
+      if (optimizerUnavailable()) {
+        showOptimizerUnavailable();
+        return;
+      }
+
+      const current = getLineup('current');
+      const suggested = getLineup('optimized');
+
+      if (!current.length || !suggested.length) {
+        leagueResults.push({
+          rawLeague: rawLeagueName,
+          league: rawLeagueName,
+          status: 'error',
+          error: 'Could not read lineup.'
+        });
+        continue;
+      }
+
+      checkedCount++;
+
+      const lineup = getLineupChanges(current, suggested);
+      const spotStarts = getSpotStarts();
+
+      const needsAttention = lineup.starts.length
+        || lineup.sits.length
+        || lineup.flexMoves.length
+        || spotStarts.length;
+
+      leagueResults.push({
+        rawLeague: rawLeagueName,
+        league: rawLeagueName,
+        status: needsAttention ? 'attention' : 'optimized',
+        starts: lineup.starts,
+        sits: lineup.sits,
+        flexMoves: lineup.flexMoves,
+        spotStarts
+      });
+    }
+
+    const sortedLeagueResults = applyConfiguredOrder(leagueResults);
+    const attentionCount = sortedLeagueResults.filter(x => x.status === 'attention').length;
+    const optimizedCount = sortedLeagueResults.filter(x => x.status === 'optimized').length;    const errorCount = sortedLeagueResults.filter(x => x.status === 'error').length;
+
+    removeBanner();
+    const results = createResultsBox();
+
+    let headerStatus = '';
+
+    if (attentionCount) {
+      headerStatus = `
+        <div style="margin-top:6px;color:${COLORS.yellow};font-weight:600;">
+          ${attentionCount} need attention
+          <span style="color:${COLORS.muted};font-weight:400;">• ${optimizedCount} optimized${errorCount ? ` • ${errorCount} couldn't verify` : ''}</span>
+        </div>`;
+    } else if (errorCount) {
+      headerStatus = `<div style="margin-top:6px;color:${COLORS.yellow};font-weight:600;">${optimizedCount} optimized • ${errorCount} couldn't verify</div>`;
+    } else {
+      headerStatus = `<div style="margin-top:6px;color:${COLORS.green};font-weight:600;">All ${optimizedCount} leagues optimized</div>`;
+    }
+
+    let html = `
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check</div>
+      <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
+      ${headerStatus}`;
+
+    for (const league of sortedLeagueResults) html += renderLeagueCard(league);
+
+    if (globalErrors.length) {
+      html += `
+        <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:12px;">
+          <div style="font-weight:700;color:${COLORS.yellow};">OTHER ERRORS</div>`;
+      for (const error of globalErrors) {
+        html += `<div style="margin-top:6px;color:${COLORS.muted};">${escapeHTML(error)}</div>`;
+      }
+      html += `</div>`;
+    }
+
+    results.innerHTML = html;
+
+    const shareModel = {
+      checkedCount,
+      teamCount,
+      leagues: sortedLeagueResults,
+      globalErrors
+    };
+
+    addButtons(results, sleeperURL, shareModel);
+    document.body.appendChild(results);
+
+    const finalSelect = getTeamSelect();
+    if (finalSelect && startingTeam) {
+      finalSelect.value = startingTeam;
+      finalSelect.dispatchEvent(new Event('input', { bubbles: true }));
+      finalSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  } catch (error) {
+    console.error('FFB Lineup Check failed:', error);
+    removeBanner();
+
+    const results = createResultsBox();
+    results.innerHTML = `
+      <div style="font-size:18px;font-weight:700;">⚠️ Fantasy Lineup Check Error</div>
+      <div style="margin-top:8px;color:${COLORS.muted};">The checker hit an unexpected page error. Reload the Ultimate Dashboard and run it again.</div>`;
+    addButtons(results);
+    document.body.appendChild(results);
+  } finally {
+    window.__ffbLineupCheckRunning = false;
+  }
+})();
