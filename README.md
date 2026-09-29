@@ -6,8 +6,10 @@
 
 ## Public install links
 
-- Main Lineup Checker shortcut: https://www.icloud.com/shortcuts/adca0aeb39b343f0917c4203f39c1cec
+- Public installer: https://usafanthonyperry-spec.github.io/ffb-lineup-check/
 - Rankings Alert shortcut: https://www.icloud.com/shortcuts/8ea889e931c843f382dc3dc63a59c70e
+
+The main lineup launcher is now intentionally built as a simple two-action Apple Shortcut: **URL → Open URLs**. Do not use the old giant shared lineup shortcut.
 
 ## Creator-only shortcut
 
@@ -41,13 +43,15 @@ The public userscript is already configured with those update/download URLs.
 
 Create a PUBLIC repository named `ffb-lineup-check`, put these files on the default branch, then enable GitHub Pages for the repository root/default branch.
 
-## Three-button user flow
+## User setup flow
 
 1. Install Userscripts.
 2. Install `FFB_Lineup_Check.user.js`.
-3. Add the Fantasy Lineup Check iCloud Shortcut.
+3. Create a new Apple Shortcut named **Fantasy Lineup Check** with:
+   - **URL** → `https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/`
+   - **Open URLs**
 
-Apple still requires the one-time Safari extension permission. That cannot be silently granted.
+The launcher should contain no JavaScript. Apple still requires the one-time Safari extension permission. That cannot be silently granted.
 
 ## Updating later
 
