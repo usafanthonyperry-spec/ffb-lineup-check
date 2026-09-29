@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.8
+// @version      1.0.9
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -24,7 +24,7 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.8';
+  const APP_VERSION = '1.0.9';
   const VERSION_INFO_URL = 'https://raw.githubusercontent.com/usafanthonyperry-spec/ffb-lineup-check/main/version.json';
   const UPDATE_URL = 'https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
@@ -723,7 +723,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.8', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.9', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
 
@@ -1122,7 +1122,7 @@
     }
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.8</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.9</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       ${headerStatus}
       ${renderVersionNotice(versionNotice)}`;
