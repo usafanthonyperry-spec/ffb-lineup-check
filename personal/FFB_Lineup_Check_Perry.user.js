@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check — Perry
 // @namespace    local.ffb.lineupcheck.perry
-// @version      1.0.1
+// @version      1.0.2
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.user.js
 // @description  Perry personal FFB lineup checker with custom league order, lineup/FLEX/SFLEX fixes, Spot Starts, and shareable results.
@@ -239,7 +239,7 @@
     const roster = document.querySelector(`.ffb-lineup-optimizer--roster#${type}`);
     if (!roster) return [];
 
-    return Array.from(roster.querySelectorAll(
+    const lineup = Array.from(roster.querySelectorAll(
       '.ffb-lineup-optimizer--starters .ffb-lineup-optimizer--row:not(.header):not(.total)'
     ))
       .map(row => ({
@@ -248,6 +248,27 @@
         kickoff: row.querySelector('.player-right-line-two span')?.innerText.trim() || ''
       }))
       .filter(x => x.slot && x.player);
+
+    // Number repeated lineup slots in the exact order they appear on the
+    // optimizer: RB 1, RB 2, WR 1, WR 2, WR 3, FLEX 1, FLEX 2, etc.
+    const totals = new Map();
+    for (const item of lineup) {
+      totals.set(item.slot, (totals.get(item.slot) || 0) + 1);
+    }
+
+    const seen = new Map();
+    return lineup.map(item => {
+      const number = (seen.get(item.slot) || 0) + 1;
+      seen.set(item.slot, number);
+
+      const repeated = (totals.get(item.slot) || 0) > 1;
+      return {
+        ...item,
+        slotNumber: number,
+        slotKey: `${item.slot}#${number}`,
+        slotLabel: repeated ? `${item.slot} ${number}` : item.slot
+      };
+    });
   }
 
   function getLineupChanges(current, suggested) {
@@ -270,8 +291,8 @@
 
       flexMoves.push({
         player: suggestedPlayer.player,
-        from: currentPlayer.slot,
-        to: suggestedPlayer.slot,
+        from: currentPlayer.slotLabel || currentPlayer.slot,
+        to: suggestedPlayer.slotLabel || suggestedPlayer.slot,
         kickoff: suggestedPlayer.kickoff
       });
     }
@@ -286,7 +307,12 @@
     for (const start of starts) {
       // Only draw a direct START → BENCH arrow when the two players occupy
       // the same lineup slot. Never fabricate a cross-position replacement.
-      const index = remaining.findIndex(sit => sit.slot === start.slot);
+      let index = remaining.findIndex(sit => sit.slotKey === start.slotKey);
+      if (index === -1) {
+        // Same-position fallback is safe; unlike the old logic, this never
+        // pairs an RB with a WR just because it is the next player available.
+        index = remaining.findIndex(sit => sit.slot === start.slot);
+      }
       const bench = index >= 0 ? remaining.splice(index, 1)[0] : null;
       pairs.push({ start, bench });
     }
@@ -454,7 +480,7 @@
         html += `<div style="margin-top:6px;font-size:15px;line-height:1.45;">`;
 
         if (pair.start) {
-          html += `<span style="color:${COLORS.green};font-weight:700;">START</span>&nbsp;${escapeHTML(pair.start.player)} <span style="color:${COLORS.muted};">(${escapeHTML(pair.start.slot)})</span>`;
+          html += `<span style="color:${COLORS.green};font-weight:700;">START</span>&nbsp;${escapeHTML(pair.start.player)} <span style="color:${COLORS.muted};">(${escapeHTML(pair.start.slotLabel || pair.start.slot)})</span>`;
         }
 
         if (pair.start && pair.bench) {
@@ -462,7 +488,7 @@
         }
 
         if (pair.bench) {
-          html += `<span style="color:${COLORS.red};font-weight:700;">BENCH</span>&nbsp;${escapeHTML(pair.bench.player)} <span style="color:${COLORS.muted};">(${escapeHTML(pair.bench.slot)})</span>`;
+          html += `<span style="color:${COLORS.red};font-weight:700;">BENCH</span>&nbsp;${escapeHTML(pair.bench.player)} <span style="color:${COLORS.muted};">(${escapeHTML(pair.bench.slotLabel || pair.bench.slot)})</span>`;
         }
 
         html += `</div>`;
@@ -674,7 +700,7 @@
 
           if (pair.start) {
             segments.push({ text: 'START ', color: COLORS.green, weight: 700 });
-            segments.push({ text: `${pair.start.player} (${pair.start.slot})`, color: COLORS.text, weight: 400 });
+            segments.push({ text: `${pair.start.player} (${pair.start.slotLabel || pair.start.slot})`, color: COLORS.text, weight: 400 });
           }
 
           if (pair.start && pair.bench) {
@@ -683,7 +709,7 @@
 
           if (pair.bench) {
             segments.push({ text: 'BENCH ', color: COLORS.red, weight: 700 });
-            segments.push({ text: `${pair.bench.player} (${pair.bench.slot})`, color: COLORS.text, weight: 400 });
+            segments.push({ text: `${pair.bench.player} (${pair.bench.slotLabel || pair.bench.slot})`, color: COLORS.text, weight: 400 });
           }
 
           drawInlineSegments(segments, contentX, contentW, 20, 29);
