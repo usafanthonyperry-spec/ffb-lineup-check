@@ -1,5 +1,9 @@
 # FFB Fantasy Lineup Check — v1.0 Public Release
 
+## Full user setup guide
+
+[Open the complete step-by-step installation and usage guide](./INSTALL.md)
+
 ## Public install links
 
 - Main Lineup Checker shortcut: https://www.icloud.com/shortcuts/adca0aeb39b343f0917c4203f39c1cec
