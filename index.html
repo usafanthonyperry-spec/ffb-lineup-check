@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1113">
+<title>FFB Fantasy Lineup Check — iPhone Setup</title>
+<style>
+:root{--bg:#0f1113;--card:#1a1d20;--border:#343a40;--text:#f5f5f5;--muted:#a7adb4;--green:#54d17a;--purple:#7c5cff;--blue:#1769aa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Arial,sans-serif}
+main{max-width:680px;margin:auto;padding:28px 18px 54px}
+h1{font-size:30px;line-height:1.1;margin:0 0 8px}
+.lead{color:var(--muted);font-size:17px;line-height:1.45;margin:0 0 24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin:14px 0}
+.step{font-size:13px;letter-spacing:.08em;color:var(--muted);font-weight:800;margin-bottom:8px}
+h2{font-size:20px;margin:0 0 8px}
+p{line-height:1.5}
+.btn{display:block;width:100%;padding:15px 16px;margin-top:14px;border-radius:12px;text-align:center;text-decoration:none;color:white;font-weight:750;font-size:17px;background:var(--purple)}
+.btn.green{background:#268b4b}
+.btn.blue{background:var(--blue)}
+.btn.secondary{background:#262b30;border:1px solid var(--border)}
+.small{font-size:14px;color:var(--muted);line-height:1.45}
+.ok{color:var(--green);font-weight:700}
+.notice{border-left:4px solid var(--green)}
+footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
+</style>
+</head>
+<body>
+<main>
+<h1>🏈 FFB Fantasy Lineup Check</h1>
+<p class="lead">Check every synced Fantasy Footballers league for lineup changes, FLEX/SFLEX placement, and Spot Starts — then share the whole report as one image.</p>
+
+<div class="card">
+  <div class="step">TAP 1</div>
+  <h2>Install Userscripts</h2>
+  <p class="small">Safari uses this extension to run the checker on the Fantasy Footballers Ultimate Dashboard.</p>
+  <a class="btn green" href="https://apps.apple.com/us/app/userscripts/id1463298887">Install Userscripts</a>
+</div>
+
+<div class="card">
+  <div class="step">TAP 2</div>
+  <h2>Install the checker</h2>
+  <p class="small">Open the script in Safari. Then open Safari's Userscripts extension and confirm Install.</p>
+  <a class="btn" href="./FFB_Lineup_Check.user.js">Install FFB Lineup Checker</a>
+</div>
+
+<div class="card">
+  <div class="step">TAP 3</div>
+  <h2>Add the launcher</h2>
+  <p class="small">This Shortcut opens the Ultimate Dashboard. The checker then runs automatically.</p>
+  <a class="btn blue" href="https://www.icloud.com/shortcuts/adca0aeb39b343f0917c4203f39c1cec">Add Fantasy Lineup Check Shortcut</a>
+</div>
+
+<div class="card notice">
+  <h2>One-time Apple permission</h2>
+  <p>Enable <strong>Userscripts</strong> under Safari Extensions and allow it on <strong>thefantasyfootballers.com</strong>.</p>
+  <p class="small">Then sign into Fantasy Footballers, open Ultimate Dashboard → Manage Teams, and make sure your Sleeper leagues are synced.</p>
+</div>
+
+<div class="card">
+  <h2>Optional Tuesday alert</h2>
+  <p class="small">Checks whether the week's Fantasy Footballers rankings appear to be live and reminds you to run the lineup checker.</p>
+  <a class="btn secondary" href="https://www.icloud.com/shortcuts/8ea889e931c843f382dc3dc63a59c70e">Add Rankings Alert Shortcut</a>
+</div>
+
+<div class="card">
+  <h2>Use it</h2>
+  <p>Tap <strong>🏈 Fantasy Lineup Check</strong>. The report shows every league, including <span class="ok">✓ OPTIMIZED</span> leagues, lineup swaps, FLEX/SFLEX moves, and Spot Starts.</p>
+  <p class="small">Tap <strong>📤 Share Results</strong> to generate one full-length PNG of the entire report.</p>
+</div>
+
+<footer>
+Unofficial community tool. Uses information already displayed to the signed-in user by The Fantasy Footballers Ultimate Dashboard. Not affiliated with or endorsed by The Fantasy Footballers or Sleeper.
+</footer>
+</main>
+</body>
+</html>
