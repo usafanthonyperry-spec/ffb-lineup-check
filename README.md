@@ -1,1 +1,1 @@
-# -ffb-lineup-check
+# ffb-lineup-check
