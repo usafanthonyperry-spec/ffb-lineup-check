@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.0
+// @version      1.0.1
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -247,28 +247,20 @@
     const flexMoves = [];
     const flexSlots = new Set(['FLEX', 'SFLEX']);
 
+    // Record every real slot change involving FLEX/SFLEX.
+    // This catches multi-player chains such as WR → FLEX → RB instead of
+    // incorrectly pretending an RB directly replaces a WR.
     for (const suggestedPlayer of suggested) {
       const currentPlayer = currentMap.get(suggestedPlayer.player);
       if (!currentPlayer) continue;
-      if (!flexSlots.has(suggestedPlayer.slot)) continue;
       if (currentPlayer.slot === suggestedPlayer.slot) continue;
-
-      const partner = suggested.find(other => {
-        const old = currentMap.get(other.player);
-        return old
-          && old.slot === suggestedPlayer.slot
-          && other.slot === currentPlayer.slot;
-      });
-
-      if (!partner) continue;
+      if (!flexSlots.has(currentPlayer.slot) && !flexSlots.has(suggestedPlayer.slot)) continue;
 
       flexMoves.push({
         player: suggestedPlayer.player,
+        from: currentPlayer.slot,
         to: suggestedPlayer.slot,
-        kickoff: suggestedPlayer.kickoff,
-        swapPlayer: partner.player,
-        swapTo: currentPlayer.slot,
-        swapKickoff: partner.kickoff
+        kickoff: suggestedPlayer.kickoff
       });
     }
 
@@ -280,8 +272,9 @@
     const pairs = [];
 
     for (const start of starts) {
-      let index = remaining.findIndex(sit => sit.slot === start.slot);
-      if (index === -1 && remaining.length) index = 0;
+      // Only draw a direct START → BENCH arrow when the two players occupy
+      // the same lineup slot. Never fabricate a cross-position replacement.
+      const index = remaining.findIndex(sit => sit.slot === start.slot);
       const bench = index >= 0 ? remaining.splice(index, 1)[0] : null;
       pairs.push({ start, bench });
     }
@@ -465,8 +458,7 @@
 
       for (const move of league.flexMoves) {
         html += `
-          <div style="margin-top:8px;"><span style="color:${COLORS.blue};font-weight:700;">FLEX</span>&nbsp; Move ${escapeHTML(move.player)} → ${escapeHTML(move.to)}</div>
-          <div style="margin-top:2px;color:${COLORS.muted};">${escapeHTML(move.swapPlayer)} → ${escapeHTML(move.swapTo)}${move.kickoff ? ` • ${escapeHTML(move.kickoff)}` : ''}</div>`;
+          <div style="margin-top:8px;"><span style="color:${COLORS.blue};font-weight:700;">FLEX</span>&nbsp; Move ${escapeHTML(move.player)}: ${escapeHTML(move.from)} → ${escapeHTML(move.to)}${move.kickoff ? ` • ${escapeHTML(move.kickoff)}` : ''}</div>`;
       }
     }
 
@@ -689,18 +681,8 @@
         for (const move of league.flexMoves) {
           drawInlineSegments([
             { text: 'FLEX ', color: COLORS.blue, weight: 700 },
-            { text: `Move ${move.player} → ${move.to}`, color: COLORS.text, weight: 400 }
+            { text: `Move ${move.player}: ${move.from} → ${move.to}${move.kickoff ? ` • ${move.kickoff}` : ''}`, color: COLORS.text, weight: 400 }
           ], contentX, contentW, 20, 29);
-
-          drawWrapped(
-            `${move.swapPlayer} → ${move.swapTo}${move.kickoff ? ` • ${move.kickoff}` : ''}`,
-            contentX,
-            contentW,
-            COLORS.muted,
-            400,
-            19,
-            27
-          );
           y += 5;
         }
       }
