@@ -83,19 +83,25 @@ Do not install multiple copies of the checker. Two active copies can cause dupli
 
 ---
 
-# Step 4 — Add the launcher Shortcut
+# Step 4 — Create the launcher Shortcut
 
-Return to the public setup page.
+The launcher should stay intentionally simple. It does **not** contain the checker JavaScript.
 
-1. Tap **Add Fantasy Lineup Check Shortcut**.
-2. Apple will open the shared Shortcut.
-3. Tap **Add Shortcut**.
+1. Open the **Shortcuts** app.
+2. Tap **+** to create a new shortcut.
+3. Name it **Fantasy Lineup Check**.
+4. Add a **URL** action with:
 
-The Shortcut is named:
+   `https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/`
 
-**🏈 Fantasy Lineup Check**
+5. Add **Open URLs** directly underneath it.
+6. Tap **Done**.
 
-Its job is simple: it opens the Fantasy Footballers Ultimate Dashboard in Safari. Once the page loads, Userscripts starts the checker automatically.
+That is the entire launcher: **URL → Open URLs**.
+
+When you run it, Safari opens the Fantasy Footballers Ultimate Dashboard. The installed Userscripts script then runs the checker automatically.
+
+Keeping the launcher this small is intentional. The actual checker code lives in Userscripts/GitHub, so future checker updates do not require rebuilding the Shortcut.
 
 ---
 
