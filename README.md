@@ -14,15 +14,15 @@ Do **not** put the Write FFB Test Script shortcut on the public 3-tap page. It i
 ## Planned GitHub repository
 
 Owner: `usafanthonyperry-spec`
-Repository: `-ffb-lineup-check`
+Repository: `ffb-lineup-check`
 
 Expected GitHub Pages site:
 
-`https://usafanthonyperry-spec.github.io/-ffb-lineup-check/`
+`https://usafanthonyperry-spec.github.io/ffb-lineup-check/`
 
 Expected userscript URL:
 
-`https://usafanthonyperry-spec.github.io/-ffb-lineup-check/FFB_Lineup_Check.user.js`
+`https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js`
 
 The public userscript is already configured with those update/download URLs.
 
@@ -35,7 +35,7 @@ The public userscript is already configured with those update/download URLs.
 
 ## GitHub Pages
 
-Create a PUBLIC repository named `-ffb-lineup-check`, put these files on the default branch, then enable GitHub Pages for the repository root/default branch.
+Create a PUBLIC repository named `ffb-lineup-check`, put these files on the default branch, then enable GitHub Pages for the repository root/default branch.
 
 ## Three-button user flow
 
