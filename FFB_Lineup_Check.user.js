@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.6
+// @version      1.0.7
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -284,7 +284,7 @@
     // Build instructions from the optimized slot, but ignore meaningless
     // re-ordering inside identical slot types. WR 1 <-> WR 2, RB 1 <-> RB 2,
     // FLEX 1 <-> FLEX 2, etc. do not change the actual starting lineup.
-    const slotChanges = suggested
+    let slotChanges = suggested
       .map(target => {
         const key = target.slotKey || target.slot;
         const previous = currentBySlot.get(key) || null;
@@ -300,6 +300,28 @@
         };
       })
       .filter(Boolean);
+
+    const kickoffKey = value => {
+      const text = String(value || '').trim();
+      if (!text) return '';
+
+      const day = text.match(/\b(mon|tue|wed|thu|fri|sat|sun)\b/i)?.[1]?.toLowerCase() || '';
+      const time = text.match(/\b(\d{1,2}:\d{2}\s*(?:am|pm))\b/i)?.[1]?.toLowerCase().replace(/\s+/g, ' ') || '';
+
+      return day && time ? `${day} ${time}` : text.toLowerCase().replace(/\s+/g, ' ');
+    };
+
+    // If the exact same players remain starters and the only remaining
+    // difference is a WR/RB/TE <-> FLEX reshuffle among players who all lock
+    // at the same time, there is no practical lineup-flexibility benefit.
+    // Suppress that noise. Keep the move when kickoff times differ.
+    if (!starts.length && !sits.length && slotChanges.length > 1) {
+      const kickoffKeys = slotChanges.map(change => kickoffKey(change.kickoff));
+      const allKnown = kickoffKeys.every(Boolean);
+      const sameKickoff = allKnown && new Set(kickoffKeys).size === 1;
+
+      if (sameKickoff) slotChanges = [];
+    }
 
     return { starts, sits, slotChanges };
   }
