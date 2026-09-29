@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.4
+// @version      1.0.5
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -335,6 +335,11 @@
       const delta = current.score != null && best.score != null
         ? best.score - current.score
         : null;
+
+      // Only surface Spot Starts that produce a visible projected gain.
+      // Anything that rounds to +0.0 is noise, and missing projections are
+      // skipped rather than shown as an unverified recommendation.
+      if (delta == null || Math.round(delta * 10) <= 0) continue;
 
       recommendations.push({ current, add: best, delta });
     }
