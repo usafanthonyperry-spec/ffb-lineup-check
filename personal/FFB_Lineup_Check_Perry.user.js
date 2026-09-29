@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check — Perry
 // @namespace    local.ffb.lineupcheck.perry
-// @version      1.0.3
+// @version      1.0.4
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.user.js
 // @description  Perry personal FFB lineup checker with custom league order, lineup/FLEX/SFLEX fixes, Spot Starts, and shareable results.
@@ -277,51 +277,31 @@
   function getLineupChanges(current, suggested) {
     const currentMap = new Map(current.map(x => [x.player, x]));
     const suggestedMap = new Map(suggested.map(x => [x.player, x]));
+    const currentBySlot = new Map(current.map(x => [x.slotKey || x.slot, x]));
 
     const starts = suggested.filter(x => !currentMap.has(x.player));
     const sits = current.filter(x => !suggestedMap.has(x.player));
-    const flexMoves = [];
-    const flexSlots = new Set(['FLEX', 'SFLEX']);
 
-    // Record every real slot change involving FLEX/SFLEX.
-    // This catches multi-player chains such as WR → FLEX → RB instead of
-    // incorrectly pretending an RB directly replaces a WR.
-    for (const suggestedPlayer of suggested) {
-      const currentPlayer = currentMap.get(suggestedPlayer.player);
-      if (!currentPlayer) continue;
-      if (currentPlayer.slot === suggestedPlayer.slot) continue;
-      if (!flexSlots.has(currentPlayer.slot) && !flexSlots.has(suggestedPlayer.slot)) continue;
+    // Build the instructions from the OPTIMIZED SLOT itself rather than
+    // trying to pair starters and bench players. This makes the result an
+    // exact target lineup: RB 1 -> Player, WR 2 -> Player, FLEX 1 -> Player.
+    const slotChanges = suggested
+      .map(target => {
+        const key = target.slotKey || target.slot;
+        const previous = currentBySlot.get(key) || null;
+        if (previous?.player === target.player) return null;
 
-      flexMoves.push({
-        player: suggestedPlayer.player,
-        from: currentPlayer.slotLabel || currentPlayer.slot,
-        to: suggestedPlayer.slotLabel || suggestedPlayer.slot,
-        kickoff: suggestedPlayer.kickoff
-      });
-    }
+        return {
+          slot: target.slotLabel || target.slot,
+          player: target.player,
+          kickoff: target.kickoff,
+          previousPlayer: previous?.player || '',
+          previousSlot: previous?.slotLabel || previous?.slot || ''
+        };
+      })
+      .filter(Boolean);
 
-    return { starts, sits, flexMoves };
-  }
-
-  function pairLineupChanges(starts, sits) {
-    const remaining = [...sits];
-    const pairs = [];
-
-    for (const start of starts) {
-      // Only draw a direct START → BENCH arrow when the two players occupy
-      // the same lineup slot. Never fabricate a cross-position replacement.
-      let index = remaining.findIndex(sit => sit.slotKey === start.slotKey);
-      if (index === -1) {
-        // Same-position fallback is safe; unlike the old logic, this never
-        // pairs an RB with a WR just because it is the next player available.
-        index = remaining.findIndex(sit => sit.slot === start.slot);
-      }
-      const bench = index >= 0 ? remaining.splice(index, 1)[0] : null;
-      pairs.push({ start, bench });
-    }
-
-    for (const bench of remaining) pairs.push({ start: null, bench });
-    return pairs;
+    return { starts, sits, slotChanges };
   }
 
   function parseSpotPlayer(el) {
@@ -471,40 +451,37 @@
         </div>`;
     }
 
-    const pairs = pairLineupChanges(league.starts, league.sits);
     let html = `
       <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:12px;">
         <div style="font-weight:700;margin-bottom:8px;">${escapeHTML(league.league)}</div>`;
 
-    if (pairs.length || league.flexMoves.length) {
+    if ((league.slotChanges || []).length || (league.sits || []).length) {
       html += `<div style="color:${COLORS.muted};font-weight:600;margin-bottom:4px;">LINEUP</div>`;
 
-      for (const pair of pairs) {
-        html += `<div style="margin-top:6px;font-size:15px;line-height:1.45;">`;
+      for (const change of (league.slotChanges || [])) {
+        html += `
+          <div style="margin-top:7px;font-size:15px;line-height:1.45;">
+            <span style="color:${COLORS.green};font-weight:700;">SET</span>&nbsp;
+            <span style="font-weight:700;">${escapeHTML(change.slot)}</span>
+            <span style="color:${COLORS.muted};">&nbsp;→&nbsp;</span>
+            ${escapeHTML(change.player)}
+          </div>`;
 
-        if (pair.start) {
-          html += `<span style="color:${COLORS.green};font-weight:700;">START</span>&nbsp;${escapeHTML(pair.start.player)} <span style="color:${COLORS.muted};">(${escapeHTML(pair.start.slotLabel || pair.start.slot)})</span>`;
+        if (change.previousPlayer) {
+          html += `<div style="margin-top:1px;color:${COLORS.muted};font-size:13px;">was ${escapeHTML(change.previousPlayer)}</div>`;
         }
-
-        if (pair.start && pair.bench) {
-          html += `<span style="color:${COLORS.muted};">&nbsp;→&nbsp;</span>`;
-        }
-
-        if (pair.bench) {
-          html += `<span style="color:${COLORS.red};font-weight:700;">BENCH</span>&nbsp;${escapeHTML(pair.bench.player)} <span style="color:${COLORS.muted};">(${escapeHTML(pair.bench.slotLabel || pair.bench.slot)})</span>`;
-        }
-
-        html += `</div>`;
       }
 
-      for (const move of league.flexMoves) {
+      for (const sit of (league.sits || [])) {
         html += `
-          <div style="margin-top:8px;"><span style="color:${COLORS.blue};font-weight:700;">FLEX</span>&nbsp; Move ${escapeHTML(move.player)}: ${escapeHTML(move.from)} → ${escapeHTML(move.to)}${move.kickoff ? ` • ${escapeHTML(move.kickoff)}` : ''}</div>`;
+          <div style="margin-top:7px;font-size:15px;line-height:1.45;">
+            <span style="color:${COLORS.red};font-weight:700;">BENCH</span>&nbsp;${escapeHTML(sit.player)}
+          </div>`;
       }
     }
 
     if (league.spotStarts.length) {
-      html += `<div style="color:${COLORS.muted};font-weight:600;margin-top:${(pairs.length || league.flexMoves.length) ? '12px' : '0'};margin-bottom:4px;">SPOT STARTS</div>`;
+      html += `<div style="color:${COLORS.muted};font-weight:600;margin-top:${((league.slotChanges || []).length || (league.sits || []).length) ? '12px' : '0'};margin-bottom:4px;">SPOT STARTS</div>`;
 
       for (const rec of league.spotStarts) {
         const deltaText = rec.delta != null ? `+${rec.delta.toFixed(1)} pts` : '';
@@ -583,8 +560,7 @@
 
     const estimated = 650 + model.leagues.reduce((sum, league) => {
       if (league.status === 'optimized' || league.status === 'error') return sum + 190;
-      const pairs = pairLineupChanges(league.starts, league.sits).length;
-      const items = pairs + league.flexMoves.length + league.spotStarts.length;
+      const items = (league.slotChanges || []).length + (league.sits || []).length + league.spotStarts.length;
       return sum + 220 + items * 95;
     }, 0) + model.globalErrors.length * 60;
 
@@ -642,7 +618,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Perry Lineup Check v1.0.3', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Perry Lineup Check v1.0.4', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
 
@@ -685,8 +661,7 @@
         continue;
       }
 
-      const pairs = pairLineupChanges(league.starts, league.sits);
-      const itemCount = pairs.length + league.flexMoves.length + league.spotStarts.length;
+      const itemCount = (league.slotChanges || []).length + (league.sits || []).length + league.spotStarts.length;
       const roughCardH = 130 + itemCount * 85;
 
       roundedRect(ctx, PAD, y, INNER_W, roughCardH, 18, COLORS.card, COLORS.border);
@@ -694,42 +669,41 @@
       drawWrapped(league.league, contentX, contentW, COLORS.text, 700, 24, 32);
       y += 8;
 
-      if (pairs.length || league.flexMoves.length) {
+      if ((league.slotChanges || []).length || (league.sits || []).length) {
         drawWrapped('LINEUP', contentX, contentW, COLORS.muted, 700, 18, 26);
         y += 2;
 
-        for (const pair of pairs) {
-          const segments = [];
+        for (const change of (league.slotChanges || [])) {
+          drawInlineSegments([
+            { text: 'SET ', color: COLORS.green, weight: 700 },
+            { text: `${change.slot} → ${change.player}`, color: COLORS.text, weight: 400 }
+          ], contentX, contentW, 20, 29);
 
-          if (pair.start) {
-            segments.push({ text: 'START ', color: COLORS.green, weight: 700 });
-            segments.push({ text: `${pair.start.player} (${pair.start.slotLabel || pair.start.slot})`, color: COLORS.text, weight: 400 });
+          if (change.previousPlayer) {
+            drawWrapped(
+              `was ${change.previousPlayer}`,
+              contentX,
+              contentW,
+              COLORS.muted,
+              400,
+              17,
+              24
+            );
           }
-
-          if (pair.start && pair.bench) {
-            segments.push({ text: '  →  ', color: COLORS.muted, weight: 400 });
-          }
-
-          if (pair.bench) {
-            segments.push({ text: 'BENCH ', color: COLORS.red, weight: 700 });
-            segments.push({ text: `${pair.bench.player} (${pair.bench.slotLabel || pair.bench.slot})`, color: COLORS.text, weight: 400 });
-          }
-
-          drawInlineSegments(segments, contentX, contentW, 20, 29);
           y += 4;
         }
 
-        for (const move of league.flexMoves) {
+        for (const sit of (league.sits || [])) {
           drawInlineSegments([
-            { text: 'FLEX ', color: COLORS.blue, weight: 700 },
-            { text: `Move ${move.player}: ${move.from} → ${move.to}${move.kickoff ? ` • ${move.kickoff}` : ''}`, color: COLORS.text, weight: 400 }
+            { text: 'BENCH ', color: COLORS.red, weight: 700 },
+            { text: sit.player, color: COLORS.text, weight: 400 }
           ], contentX, contentW, 20, 29);
-          y += 5;
+          y += 4;
         }
       }
 
       if (league.spotStarts.length) {
-        if (pairs.length || league.flexMoves.length) y += 5;
+        if ((league.slotChanges || []).length || (league.sits || []).length) y += 5;
         drawWrapped('SPOT STARTS', contentX, contentW, COLORS.muted, 700, 18, 26);
         y += 2;
 
@@ -1004,9 +978,8 @@
       const lineup = getLineupChanges(current, suggested);
       const spotStarts = getSpotStarts();
 
-      const needsAttention = lineup.starts.length
+      const needsAttention = lineup.slotChanges.length
         || lineup.sits.length
-        || lineup.flexMoves.length
         || spotStarts.length;
 
       leagueResults.push({
@@ -1015,7 +988,7 @@
         status: needsAttention ? 'attention' : 'optimized',
         starts: lineup.starts,
         sits: lineup.sits,
-        flexMoves: lineup.flexMoves,
+        slotChanges: lineup.slotChanges,
         spotStarts
       });
     }
@@ -1042,7 +1015,7 @@
     }
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Perry Lineup Check v1.0.3</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Perry Lineup Check v1.0.4</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       ${headerStatus}`;
 
