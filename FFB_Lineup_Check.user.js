@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.43
+// @version      1.0.44
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -29,7 +29,7 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.43';
+  const APP_VERSION = '1.0.44';
   const HIDE_OPTIMIZED_STORAGE_KEY = 'ffb-public-hide-optimized';
   // User-selected Chiefs photos, packed into a lightweight self-contained animated WebP slideshow.
   const UPDATE_INSTALL_URL = 'https://usafanthonyperry-spec.github.io/ffb-lineup-check/';
@@ -358,7 +358,7 @@
       .join('|');
   }
 
-  async function syncTeamAndWait(syncButton, timeoutMs = 9000) {
+  async function syncTeamAndWait(syncButton, timeoutMs = 7500) {
     if (!syncButton) return;
 
     const beforeFingerprint = lineupFingerprint(getLineup('current'));
@@ -400,13 +400,13 @@
 
       // If the synced Current lineup actually changed, require that exact
       // player/slot fingerprint to remain stable before using it.
-      if (changedFromBefore && fingerprintStableFor >= 750 && !buttonBusy && elapsed >= 1200) {
+      if (changedFromBefore && fingerprintStableFor >= 600 && !buttonBusy && elapsed >= 1000) {
         return;
       }
 
       // If the lineup is already synced and therefore never changes, ignore
       // cosmetic redraws completely and wait the full fallback period.
-      if (!changedFromBefore && !buttonBusy && elapsed >= 5000) {
+      if (!changedFromBefore && !buttonBusy && elapsed >= 3500) {
         return;
       }
     }
@@ -806,7 +806,7 @@
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
     const attentionCount = lineupCount + spotCount + errorCount;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.43', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.44', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -1021,7 +1021,7 @@
         ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Fantasy Lineup Check v1.0.43`,
+      `🏈 Fantasy Lineup Check v1.0.44`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       attentionCount ? `⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention` : '',
