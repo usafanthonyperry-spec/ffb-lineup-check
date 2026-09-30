@@ -1,0 +1,73 @@
+name: Report a bug
+description: Report something that is not working correctly
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Screenshots are especially helpful for lineup, FLEX/SFLEX, Spot Starts, and version-update issues.
+
+  - type: input
+    id: version
+    attributes:
+      label: Checker version
+      description: What version is shown at the top of the results screen?
+      placeholder: "Example: v1.0.17"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: version_type
+    attributes:
+      label: Which checker are you using?
+      options:
+        - Public version
+        - Perry personal version
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the incorrect behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Tell us what you tapped or did before the problem appeared.
+      placeholder: |
+        1. Run Fantasy Lineup Check
+        2. Open league...
+        3. See...
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or screen recording
+      description: Optional, but strongly recommended. Drag the image or video into this box.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Before submitting
+      options:
+        - label: I verified the version number shown in my checker header.
+          required: true
