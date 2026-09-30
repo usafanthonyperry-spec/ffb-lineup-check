@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.20
+// @version      1.0.21
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -25,7 +25,7 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.20';
+  const APP_VERSION = '1.0.21';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
 
   const IS_LAUNCHER = location.hostname === 'usafanthonyperry-spec.github.io'
@@ -718,9 +718,12 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.20', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.21', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
+    if (model.checkedAt) {
+      drawWrapped(`Checked ${model.checkedAt}`, PAD, INNER_W, COLORS.muted, 400, 18, 26);
+    }
 
     const summarySegments = [];
     const addSummaryPart = (text, color, weight = 700) => {
@@ -889,6 +892,116 @@
     return finalCanvas.toDataURL('image/png');
   }
 
+  function formatCheckedAt(value = new Date()) {
+    const date = value instanceof Date ? value : new Date(value);
+
+    try {
+      return date.toLocaleString([], {
+        weekday: 'short',
+        hour: 'numeric',
+        minute: '2-digit'
+      });
+    } catch (_) {
+      return date.toLocaleString();
+    }
+  }
+
+  function buildTextSummary(model) {
+    const lineupCount = model.leagues.filter(x => x.status === 'lineup').length;
+    const spotCount = model.leagues.filter(x => x.status === 'spot').length;
+    const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
+    const errorCount = model.leagues.filter(x => x.status === 'error').length;
+
+    const counts = [
+      lineupCount ? `🔴 ${lineupCount} lineup ${lineupCount === 1 ? 'change' : 'changes'}` : '',
+      spotCount ? `🟡 ${spotCount} Spot Start${spotCount === 1 ? '' : 's'}` : '',
+      optimizedCount ? `🟢 ${optimizedCount} optimized` : '',
+      errorCount ? `⚠️ ${errorCount} couldn't verify` : ''
+    ].filter(Boolean).join(' • ');
+
+    const lines = [
+      `🏈 Fantasy Lineup Check v1.0.21`,
+      `${model.checkedCount} of ${model.teamCount} leagues checked`,
+      model.checkedAt ? `Checked ${model.checkedAt}` : '',
+      counts,
+      ''
+    ];
+
+    for (const league of model.leagues) {
+      if (league.status === 'optimized') {
+        lines.push(`🟢 ${league.league} — Optimized`, '');
+        continue;
+      }
+
+      if (league.status === 'error') {
+        lines.push(`⚠️ ${league.league} — Couldn't verify`);
+        if (league.error) lines.push(league.error);
+        lines.push('');
+        continue;
+      }
+
+      lines.push(
+        `${league.status === 'lineup' ? '🔴' : '🟡'} ${league.league} — ${league.status === 'lineup' ? 'Lineup changes' : 'Spot Starts'}`
+      );
+
+      for (const change of (league.slotChanges || [])) {
+        lines.push(`SET ${change.slot} → ${change.player}${change.previousPlayer ? ` (was ${change.previousPlayer})` : ''}`);
+      }
+
+      for (const sit of (league.sits || [])) {
+        lines.push(`BENCH ${sit.player}`);
+      }
+
+      for (const rec of (league.spotStarts || [])) {
+        const delta = rec.delta != null ? ` +${rec.delta.toFixed(1)} pts` : '';
+        const verb = ['D', 'K'].includes(rec.current.position) ? 'REPLACE' : 'START OVER';
+        lines.push(`ADD ${rec.add.player} (${rec.add.position}) — ${verb} ${rec.current.player}${delta}`);
+      }
+
+      lines.push('');
+    }
+
+    if (model.globalErrors?.length) {
+      lines.push('OTHER ERRORS');
+      for (const error of model.globalErrors) lines.push(error);
+    }
+
+    return lines.filter((line, index, arr) =>
+      line !== '' || (index > 0 && arr[index - 1] !== '')
+    ).join('\n').trim();
+  }
+
+  async function copySummary(model, button) {
+    const oldText = button.textContent;
+    const summary = buildTextSummary(model);
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(summary);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = summary;
+        textarea.setAttribute('readonly', '');
+        Object.assign(textarea.style, {
+          position: 'fixed',
+          opacity: '0',
+          pointerEvents: 'none'
+        });
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+      }
+
+      button.textContent = '✅ Summary Copied';
+      setTimeout(() => { button.textContent = oldText; }, 1800);
+    } catch (error) {
+      console.error('Copy summary failed:', error);
+      button.textContent = 'Copy Failed — Try Again';
+      setTimeout(() => { button.textContent = oldText; }, 2200);
+    }
+  }
+
   async function shareResults(model, button) {
     const oldText = button.textContent;
 
@@ -947,15 +1060,59 @@
     rerun.onclick = () => location.reload();
     results.appendChild(rerun);
 
-    const done = makeButton('Done', COLORS.card);
-    done.onclick = () => results.remove();
-    results.appendChild(done);
-
     if (shareModel) {
+      const copy = makeButton('📋 Copy Summary', COLORS.card2);
+      copy.onclick = () => copySummary(shareModel, copy);
+      results.appendChild(copy);
+
       const share = makeButton('📤 Share Results', COLORS.card2);
       share.onclick = () => shareResults(shareModel, share);
       results.appendChild(share);
+
+      const feedback = document.createElement('div');
+      Object.assign(feedback.style, {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '8px',
+        marginTop: '10px'
+      });
+
+      const makeFeedbackLink = (text, href) => {
+        const link = document.createElement('a');
+        link.textContent = text;
+        link.href = href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        Object.assign(link.style, {
+          display: 'block',
+          boxSizing: 'border-box',
+          padding: '11px 8px',
+          textAlign: 'center',
+          fontSize: '13px',
+          fontWeight: '600',
+          borderRadius: '10px',
+          border: `1px solid ${COLORS.border}`,
+          background: COLORS.card,
+          color: COLORS.text,
+          textDecoration: 'none'
+        });
+        return link;
+      };
+
+      feedback.appendChild(makeFeedbackLink(
+        '💡 Suggest',
+        'https://github.com/usafanthonyperry-spec/ffb-lineup-check/issues/new?template=feature_request.yml'
+      ));
+      feedback.appendChild(makeFeedbackLink(
+        '🐛 Report Bug',
+        'https://github.com/usafanthonyperry-spec/ffb-lineup-check/issues/new?template=bug_report.yml'
+      ));
+      results.appendChild(feedback);
     }
+
+    const done = makeButton('Done', COLORS.card);
+    done.onclick = () => results.remove();
+    results.appendChild(done);
   }
 
   function showOptimizerUnavailable() {
@@ -1126,6 +1283,7 @@
     const spotCount = sortedLeagueResults.filter(x => x.status === 'spot').length;
     const optimizedCount = sortedLeagueResults.filter(x => x.status === 'optimized').length;
     const errorCount = sortedLeagueResults.filter(x => x.status === 'error').length;
+    const checkedAt = formatCheckedAt();
 
     removeBanner();
     const results = createResultsBox();
@@ -1151,8 +1309,9 @@
       </div>`;
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.20</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.21</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
+      <div style="margin-top:2px;color:${COLORS.muted};font-size:13px;">Checked ${escapeHTML(checkedAt)}</div>
       ${headerStatus}
       ${renderVersionNotice(versionNotice)}`;
 
@@ -1173,6 +1332,7 @@
     const shareModel = {
       checkedCount,
       teamCount,
+      checkedAt,
       leagues: sortedLeagueResults,
       globalErrors
     };
