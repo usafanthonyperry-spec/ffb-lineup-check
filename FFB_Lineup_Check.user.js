@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.15
+// @version      1.0.16
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
 // @match        https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/*
+// @match        https://usafanthonyperry-spec.github.io/ffb-lineup-check/launch.html*
 // @run-at       document-idle
 // @grant        none
 // @noframes
@@ -24,10 +25,23 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.15';
-  const VERSION_INFO_URL = 'https://raw.githubusercontent.com/usafanthonyperry-spec/ffb-lineup-check/main/version.json';
-  const UPDATE_URL = 'https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js';
+  const APP_VERSION = '1.0.16';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
+
+  const IS_LAUNCHER = location.hostname === 'usafanthonyperry-spec.github.io'
+    && location.pathname.endsWith('/ffb-lineup-check/launch.html');
+
+  if (IS_LAUNCHER) {
+    const latest = document.querySelector('meta[name="ffb-latest"]')?.content?.trim() || '';
+
+    if (latest && compareVersions(latest, APP_VERSION) > 0) {
+      alert(`⬆️ Update available — v${latest}\nYou’re using v${APP_VERSION}.`);
+    }
+
+    window.dispatchEvent(new CustomEvent('ffb-version-checked'));
+    window.__ffbLineupCheckRunning = false;
+    return;
+  }
 
   const COLORS = {
     bg: '#111315',
@@ -72,28 +86,9 @@
       previousVersion = localStorage.getItem(VERSION_STORAGE_KEY) || '';
     } catch (_) {}
 
-    // The lightweight launcher redirects here with the latest release number
-    // in the URL. This avoids cross-origin/CSP/extension-permission issues.
-    const params = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(
-      String(window.location.hash || '').replace(/^#/, '')
-    );
-    const remoteVersion = String(
-      params.get('ffb_latest')
-      || hashParams.get('ffb_latest')
-      || ''
-    ).trim();
-
     let notice = null;
 
-    if (remoteVersion && compareVersions(remoteVersion, APP_VERSION) > 0) {
-      notice = {
-        type: 'update',
-        currentVersion: APP_VERSION,
-        remoteVersion,
-        updateUrl: UPDATE_URL
-      };
-    } else if (
+    if (
       previousVersion
       && previousVersion !== APP_VERSION
       && compareVersions(APP_VERSION, previousVersion) > 0
@@ -113,15 +108,6 @@
 
   function renderVersionNotice(notice) {
     if (!notice) return '';
-
-    if (notice.type === 'update') {
-      return `
-        <div style="margin-top:12px;padding:12px;background:#3a3214;border:1px solid ${COLORS.yellow};border-radius:10px;">
-          <div style="font-weight:700;color:${COLORS.yellow};">⬆️ Update available — v${escapeHTML(notice.remoteVersion)}</div>
-          <div style="margin-top:4px;color:${COLORS.muted};">You’re using v${escapeHTML(notice.currentVersion)}.</div>
-          <a href="${escapeHTML(notice.updateUrl)}" style="display:block;margin-top:9px;padding:10px 12px;border-radius:9px;background:${COLORS.purple};color:#fff;text-decoration:none;text-align:center;font-weight:700;">Tap to Update</a>
-        </div>`;
-    }
 
     return `
       <div style="margin-top:12px;padding:10px 12px;background:${COLORS.card2};border:1px solid ${COLORS.green};border-radius:10px;color:${COLORS.green};font-weight:700;">
@@ -725,7 +711,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.15', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.16', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
 
@@ -1124,7 +1110,7 @@
     }
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.15</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.16</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       ${headerStatus}
       ${renderVersionNotice(versionNotice)}`;
