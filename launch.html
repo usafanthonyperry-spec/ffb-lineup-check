@@ -7,22 +7,44 @@
 <meta name="ffb-latest" content="1.0.17">
 <title>Opening Fantasy Lineup Check…</title>
 <style>
-body{margin:0;background:#0f1113;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Arial,sans-serif;display:grid;place-items:center;min-height:100vh;text-align:center;padding:24px}
-p{color:#a7adb4}
+:root{--bg:#0f1113;--card:#1a1d20;--border:#343a40;--text:#f5f5f5;--muted:#a7adb4;--yellow:#f2c94c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Arial,sans-serif;display:grid;place-items:center;min-height:100vh;text-align:center;padding:24px}
+.card{max-width:520px;width:100%;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px}
+h2{margin:0 0 10px;font-size:24px}
+p{color:var(--muted);line-height:1.45;margin:8px 0}
+.update{color:var(--yellow);font-weight:800;font-size:20px}
 </style>
 </head>
 <body>
-<div><h2>🏈 Opening Fantasy Lineup Check…</h2><p>Checking for updates, then opening the Ultimate Dashboard.</p></div>
+<div class="card">
+  <h2>🏈 Fantasy Lineup Check</h2>
+  <div id="status"><p>Opening the Ultimate Dashboard…</p></div>
+</div>
 <script>
 (() => {
-  let opened = false;
-  const go = () => {
-    if (opened) return;
-    opened = true;
+  const LATEST_VERSION = "1.0.17";
+  const STORAGE_KEY = "ffb-last-announced-release-v1";
+  const status = document.getElementById("status");
+  let last = "";
+
+  try { last = localStorage.getItem(STORAGE_KEY) || ""; } catch (_) {}
+
+  const isNewRelease = last !== LATEST_VERSION;
+
+  if (isNewRelease) {
+    status.innerHTML =
+      '<div class="update">⬆️ New version available — v' + LATEST_VERSION + '</div>' +
+      '<p>Check the version in your lineup-checker header. If it is older than v' +
+      LATEST_VERSION + ', update from the installer page.</p>' +
+      '<p>Opening the Dashboard in a few seconds…</p>';
+
+    try { localStorage.setItem(STORAGE_KEY, LATEST_VERSION); } catch (_) {}
+  }
+
+  setTimeout(() => {
     location.replace("https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/");
-  };
-  window.addEventListener("ffb-version-checked", go, { once: true });
-  setTimeout(go, 1800);
+  }, isNewRelease ? 4500 : 350);
 })();
 </script>
 </body>
