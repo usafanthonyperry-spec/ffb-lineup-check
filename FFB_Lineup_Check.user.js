@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.19
+// @version      1.0.20
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -25,7 +25,7 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.19';
+  const APP_VERSION = '1.0.20';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
 
   const IS_LAUNCHER = location.hostname === 'usafanthonyperry-spec.github.io'
@@ -528,10 +528,9 @@
   function renderLeagueCard(league) {
     if (league.status === 'optimized') {
       return `
-        <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:2px solid ${COLORS.green};border-radius:12px;">
-          <div style="font-weight:700;margin-bottom:8px;">${escapeHTML(league.league)}</div>
-          <div style="color:${COLORS.green};font-weight:700;">✓ OPTIMIZED</div>
-          <div style="margin-top:3px;color:${COLORS.muted};">No lineup or Spot Starts changes needed.</div>
+        <div data-ffb-status="optimized" style="margin-top:10px;padding:10px 12px;background:${COLORS.card};border:2px solid ${COLORS.green};border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="font-weight:700;min-width:0;">${escapeHTML(league.league)}</div>
+          <div style="color:${COLORS.green};font-weight:700;white-space:nowrap;">✓ OPTIMIZED</div>
         </div>`;
     }
 
@@ -658,7 +657,8 @@
     const INNER_W = W - PAD * 2;
 
     const estimated = 650 + model.leagues.reduce((sum, league) => {
-      if (league.status === 'optimized' || league.status === 'error') return sum + 190;
+      if (league.status === 'optimized') return sum + 120;
+      if (league.status === 'error') return sum + 190;
       const items = (league.slotChanges || []).length + (league.sits || []).length + league.spotStarts.length;
       return sum + 220 + items * 95;
     }, 0) + model.globalErrors.length * 60;
@@ -718,37 +718,33 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.19', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.20', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
 
+    const summarySegments = [];
+    const addSummaryPart = (text, color, weight = 700) => {
+      if (summarySegments.length) {
+        summarySegments.push({ text: ' • ', color: COLORS.muted, weight: 400 });
+      }
+      summarySegments.push({ text, color, weight });
+    };
+
     if (lineupCount) {
-      drawWrapped(`${lineupCount} lineup ${lineupCount === 1 ? 'needs' : 'need'} changes`, PAD, INNER_W, COLORS.red, 700, 21, 30);
-      if (spotCount || optimizedCount || errorCount) {
-        drawWrapped(
-          [
-            spotCount ? `${spotCount} spot-start only` : '',
-            optimizedCount ? `${optimizedCount} optimized` : '',
-            errorCount ? `${errorCount} couldn't verify` : ''
-          ].filter(Boolean).join(' • '),
-          PAD, INNER_W, COLORS.muted, 400, 19, 28
-        );
-      }
-    } else if (spotCount) {
-      drawWrapped(`${spotCount} lineup ${spotCount === 1 ? 'is' : 'are'} set • Spot Starts available`, PAD, INNER_W, COLORS.yellow, 700, 21, 30);
-      if (optimizedCount || errorCount) {
-        drawWrapped(
-          [
-            optimizedCount ? `${optimizedCount} optimized` : '',
-            errorCount ? `${errorCount} couldn't verify` : ''
-          ].filter(Boolean).join(' • '),
-          PAD, INNER_W, COLORS.muted, 400, 19, 28
-        );
-      }
-    } else if (errorCount) {
-      drawWrapped(`${optimizedCount} optimized • ${errorCount} couldn't verify`, PAD, INNER_W, COLORS.yellow, 700, 21, 30);
-    } else {
-      drawWrapped(`All ${optimizedCount} leagues optimized`, PAD, INNER_W, COLORS.green, 700, 21, 30);
+      addSummaryPart(`${lineupCount} lineup ${lineupCount === 1 ? 'change' : 'changes'}`, COLORS.red);
+    }
+    if (spotCount) {
+      addSummaryPart(`${spotCount} Spot Start${spotCount === 1 ? '' : 's'}`, COLORS.yellow);
+    }
+    if (optimizedCount) {
+      addSummaryPart(`${optimizedCount} optimized`, COLORS.green);
+    }
+    if (errorCount) {
+      addSummaryPart(`${errorCount} couldn't verify`, COLORS.yellow, 600);
+    }
+
+    if (summarySegments.length) {
+      drawInlineSegments(summarySegments, PAD, INNER_W, 20, 29);
     }
 
     y += 18;
@@ -759,14 +755,12 @@
       const contentW = INNER_W - CARD_PAD * 2;
 
       if (league.status === 'optimized') {
-        const cardH = 145;
+        const cardH = 92;
         roundedRect(ctx, PAD, y, INNER_W, cardH, 18, COLORS.card, COLORS.green);
-        y += CARD_PAD;
-        drawWrapped(league.league, contentX, contentW, COLORS.text, 700, 24, 32);
-        y += 5;
-        drawWrapped('✓ OPTIMIZED', contentX, contentW, COLORS.green, 700, 20, 29);
-        drawWrapped('No lineup or Spot Starts changes needed.', contentX, contentW, COLORS.muted, 400, 18, 26);
-        y = Math.max(y + CARD_PAD, cardStart + cardH) + 18;
+        y += 18;
+        drawWrapped(league.league, contentX, contentW, COLORS.text, 700, 22, 29);
+        drawWrapped('✓ OPTIMIZED', contentX, contentW, COLORS.green, 700, 18, 25);
+        y = Math.max(y + 10, cardStart + cardH) + 12;
         continue;
       }
 
@@ -1136,31 +1130,28 @@
     removeBanner();
     const results = createResultsBox();
 
-    let headerStatus = '';
+    const headerParts = [];
 
     if (lineupCount) {
-      headerStatus = `
-        <div style="margin-top:6px;color:${COLORS.red};font-weight:700;">
-          ${lineupCount} lineup ${lineupCount === 1 ? 'needs' : 'need'} changes
-          ${spotCount ? `<span style="color:${COLORS.muted};font-weight:400;"> • ${spotCount} spot-start only</span>` : ''}
-          ${optimizedCount ? `<span style="color:${COLORS.green};font-weight:600;"> • ${optimizedCount} optimized</span>` : ''}
-          ${errorCount ? `<span style="color:${COLORS.muted};font-weight:400;"> • ${errorCount} couldn't verify</span>` : ''}
-        </div>`;
-    } else if (spotCount) {
-      headerStatus = `
-        <div style="margin-top:6px;color:${COLORS.yellow};font-weight:700;">
-          ${spotCount} lineup ${spotCount === 1 ? 'is' : 'are'} set • Spot Starts available
-          ${optimizedCount ? `<span style="color:${COLORS.green};font-weight:600;"> • ${optimizedCount} optimized</span>` : ''}
-          ${errorCount ? `<span style="color:${COLORS.muted};font-weight:400;"> • ${errorCount} couldn't verify</span>` : ''}
-        </div>`;
-    } else if (errorCount) {
-      headerStatus = `<div style="margin-top:6px;color:${COLORS.yellow};font-weight:600;">${optimizedCount} optimized • ${errorCount} couldn't verify</div>`;
-    } else {
-      headerStatus = `<div style="margin-top:6px;color:${COLORS.green};font-weight:600;">All ${optimizedCount} leagues optimized</div>`;
+      headerParts.push(`<span style="color:${COLORS.red};font-weight:700;">🔴 ${lineupCount} lineup ${lineupCount === 1 ? 'change' : 'changes'}</span>`);
+    }
+    if (spotCount) {
+      headerParts.push(`<span style="color:${COLORS.yellow};font-weight:700;">🟡 ${spotCount} Spot Start${spotCount === 1 ? '' : 's'}</span>`);
+    }
+    if (optimizedCount) {
+      headerParts.push(`<span style="color:${COLORS.green};font-weight:700;">🟢 ${optimizedCount} optimized</span>`);
+    }
+    if (errorCount) {
+      headerParts.push(`<span style="color:${COLORS.yellow};font-weight:600;">⚠️ ${errorCount} couldn't verify</span>`);
     }
 
+    const headerStatus = `
+      <div style="margin-top:6px;line-height:1.55;">
+        ${headerParts.join(`<span style="color:${COLORS.muted};font-weight:400;"> • </span>`)}
+      </div>`;
+
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.19</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.20</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       ${headerStatus}
       ${renderVersionNotice(versionNotice)}`;
