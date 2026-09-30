@@ -2,7 +2,7 @@
 
 An iPhone/Safari helper for The Fantasy Footballers Ultimate Dashboard. It checks every synced league for lineup changes, FLEX/SFLEX placement, Spot Starts, and already-optimized leagues.
 
-**Current release: v1.0.34 — Sep 30, 2026**
+**Current release: v1.0.35 — Sep 30, 2026**
 
 ## Install
 
@@ -47,6 +47,12 @@ Numbered slots inside the same position are treated as equivalent. A player alre
 - **✅ All leagues optimized** summary when every verified league is clean.
 - **💡 Suggest** and **🐛 Report Bug** links inside completed results.
 - Counts the first successful public checker run from each browser so public adoption can be estimated.
+
+## v1.0.35 changes
+
+- Increases the finished Safari results panel from **90%** to **96% of the visible screen height**.
+- Width remains about **96% of the screen**.
+- Sticky header, internal scrolling, lineup comparison, Spot Starts, update status, Shortcut flow, and Hide Optimized behavior are unchanged.
 
 ## v1.0.34 changes
 
