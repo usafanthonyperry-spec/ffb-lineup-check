@@ -2,7 +2,7 @@
 
 An iPhone/Safari helper for The Fantasy Footballers Ultimate Dashboard. It checks every synced league for lineup changes, FLEX/SFLEX placement, Spot Starts, and already-optimized leagues.
 
-**Current release: v1.0.22 — Sep 29, 2026**
+**Current release: v1.0.23 — Sep 29, 2026**
 
 ## Install
 
@@ -42,6 +42,17 @@ Numbered slots inside the same position are treated as equivalent. A player alre
 - **📤 Share Results** creates one full-length PNG.
 - **Open Sleeper**, **Run Again**, and **Done** controls.
 - **💡 Suggest** and **🐛 Report Bug** links inside completed results.
+- Counts the first successful public checker run from each browser so public adoption can be estimated.
+
+## Public usage counter
+
+v1.0.23 adds a lightweight counter for the public build only. After a browser completes its first successful public lineup scan, the checker sends one counter hit and stores a local flag so future runs from that browser are not counted again.
+
+No league names, players, Sleeper IDs, passwords, lineup data, IP addresses, cookies, or user-agent strings are used by the counter service. The Perry/private build does not send this counter.
+
+Usage statistics:
+
+https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-use/
 
 ## Shared Shortcuts
 
