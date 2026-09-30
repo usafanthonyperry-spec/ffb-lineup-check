@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
+<meta name="ffb-latest" content="1.0.16">
 <title>Opening Fantasy Lineup Check…</title>
 <style>
 body{margin:0;background:#0f1113;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Arial,sans-serif;display:grid;place-items:center;min-height:100vh;text-align:center;padding:24px}
@@ -11,9 +12,18 @@ p{color:#a7adb4}
 </style>
 </head>
 <body>
-<div><h2>🏈 Opening Fantasy Lineup Check…</h2><p>Taking you to the Ultimate Dashboard.</p></div>
+<div><h2>🏈 Opening Fantasy Lineup Check…</h2><p>Checking for updates, then opening the Ultimate Dashboard.</p></div>
 <script>
-location.replace("https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/#ffb_latest=1.0.15");
+(() => {
+  let opened = false;
+  const go = () => {
+    if (opened) return;
+    opened = true;
+    location.replace("https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/");
+  };
+  window.addEventListener("ffb-version-checked", go, { once: true });
+  setTimeout(go, 1800);
+})();
 </script>
 </body>
 </html>
