@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.27 — Sep 29, 2026**
+**Current release: v1.0.28 — Sep 29, 2026**
 
 Public installer:
 
@@ -98,6 +98,8 @@ If anything does need attention, the top of the report also shows a single **⚠
 
 Starting in v1.0.27, the compact version/status/Hide Optimized area stays visible while you scroll. The checked-league count and timestamp stay below it so the sticky area remains small.
 
+Starting in v1.0.28, that sticky area also checks the latest published checker version. When current, it shows **✓ vX.X.X current**. If a newer version exists, it shows **⬆️ Update available — vX.X.X** with an **Install Update** link. The version check runs after results appear and does not delay the lineup scan.
+
 ### Numbered lineup spots
 
 Numbered spots inside the same position are interchangeable.
@@ -171,6 +173,9 @@ The week's optimizer data may still be processing. Try again after rankings are 
 **Couldn't Verify:**  
 Run the checker again. If the same league keeps failing, confirm that league loads correctly in Ultimate Dashboard.
 
+**Update status does not appear:**  
+The remote version check could not complete. The lineup checker still works normally. Keep the main Shortcut version notification as the fallback, and confirm Userscripts has permission to run on the Dashboard.
+
 **Duplicate scans/results:**  
 Disable older FFB userscripts and leave only one checker enabled.
 
@@ -184,6 +189,8 @@ The checker reads information already visible on the Fantasy Footballers Dashboa
 It does not require you to place your Fantasy Footballers password, Sleeper password, Sleeper username, or league IDs in the script.
 
 Starting with v1.0.23, the **public build only** records one anonymous usage count after a browser completes its first successful lineup scan. A local browser flag prevents later runs from counting again. The counter does not send league names, players, Sleeper IDs, passwords, or lineup data. The Perry/private build is excluded.
+
+Starting with v1.0.28, both builds request the public `latest.txt` version file after a successful scan so the sticky header can show whether an update is available. No league, player, lineup, or account data is included in that version request.
 
 Public counter statistics:
 
