@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.36 — Sep 30, 2026**
+**Current release: v1.0.37 — Sep 30, 2026**
 
 Public installer:
 
@@ -89,7 +89,7 @@ You should briefly see progress such as:
 - `🏈 Loading Fantasy Dashboard…`
 - `🏈 Checking 1 of 11: League Name`
 
-While the checker is actively checking leagues, the loading banner includes a lightweight moving Patrick Mahomes image. It disappears as soon as the scan finishes.
+While the checker is actively interpreting leagues, a near-full-screen Chiefs championship photo slideshow runs behind the **Checking X of Y** status. It starts with the first league and disappears as soon as the finished results are ready.
 
 When the scan finishes, the results window opens as a near-full-screen panel in Safari, while keeping the sticky header and scrolling inside the results.
 
