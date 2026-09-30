@@ -231,11 +231,19 @@ Use this after making lineup or roster changes if you want to check everything a
 
 Closes the results window.
 
+## 📋 Copy Summary
+
+Copies a text version of the report to your clipboard. It includes the checked time, color-coded status summary, and each league's lineup / Spot Starts details so it can be pasted into Messages, Discord, Slack, or notes.
+
 ## 📤 Share Results
 
-Creates one full-length PNG containing the entire report.
+Creates one full-length PNG containing the entire report, including the checked time.
 
 This is not just a screenshot of the visible portion of your phone. The checker builds an image containing all league cards from top to bottom and opens the normal iPhone Share Sheet.
+
+## 💡 Suggest / 🐛 Report Bug
+
+The bottom of a completed report includes direct links to the project's GitHub suggestion and bug-report forms. These are optional and do not affect the lineup scan.
 
 ---
 
