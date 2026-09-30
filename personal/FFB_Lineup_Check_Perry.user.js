@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check — Perry
 // @namespace    local.ffb.lineupcheck.perry
-// @version      1.0.17
+// @version      1.0.18
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.user.js
 // @description  Perry personal FFB lineup checker with custom league order, lineup/FLEX/SFLEX fixes, Spot Starts, and shareable results.
@@ -40,7 +40,7 @@
     'Off With Their Heads'
   ];
 
-  const APP_VERSION = '1.0.17';
+  const APP_VERSION = '1.0.18';
   const VERSION_STORAGE_KEY = 'ffb-perry-last-version';
 
   const IS_LAUNCHER = location.hostname === 'usafanthonyperry-spec.github.io'
@@ -543,7 +543,7 @@
   function renderLeagueCard(league) {
     if (league.status === 'optimized') {
       return `
-        <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:12px;">
+        <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:2px solid ${COLORS.green};border-radius:12px;">
           <div style="font-weight:700;margin-bottom:8px;">${escapeHTML(league.league)}</div>
           <div style="color:${COLORS.green};font-weight:700;">✓ OPTIMIZED</div>
           <div style="margin-top:3px;color:${COLORS.muted};">No lineup or Spot Starts changes needed.</div>
@@ -552,16 +552,22 @@
 
     if (league.status === 'error') {
       return `
-        <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:12px;">
+        <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:2px solid ${COLORS.yellow};border-radius:12px;">
           <div style="font-weight:700;margin-bottom:8px;">${escapeHTML(league.league)}</div>
           <div style="color:${COLORS.yellow};font-weight:700;">COULDN'T VERIFY</div>
           <div style="margin-top:3px;color:${COLORS.muted};">${escapeHTML(league.error || 'Could not read lineup.')}</div>
         </div>`;
     }
 
+    const cardColor = league.status === 'lineup' ? COLORS.red : COLORS.yellow;
+    const statusLabel = league.status === 'lineup'
+      ? 'LINEUP CHANGES'
+      : 'LINEUP SET • SPOT STARTS AVAILABLE';
+
     let html = `
-      <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:12px;">
-        <div style="font-weight:700;margin-bottom:8px;">${escapeHTML(league.league)}</div>`;
+      <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:2px solid ${cardColor};border-radius:12px;">
+        <div style="font-weight:700;margin-bottom:6px;">${escapeHTML(league.league)}</div>
+        <div style="color:${cardColor};font-weight:700;margin-bottom:8px;">${statusLabel}</div>`;
 
     if ((league.slotChanges || []).length || (league.sits || []).length) {
       html += `<div style="color:${COLORS.muted};font-weight:600;margin-bottom:4px;">LINEUP</div>`;
@@ -722,16 +728,38 @@
       y = lineY + lineHeight;
     };
 
-    const attentionCount = model.leagues.filter(x => x.status === 'attention').length;
+    const lineupCount = model.leagues.filter(x => x.status === 'lineup').length;
+    const spotCount = model.leagues.filter(x => x.status === 'spot').length;
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Perry Lineup Check v1.0.17', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Perry Lineup Check v1.0.18', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
 
-    if (attentionCount) {
-      drawWrapped(`${attentionCount} need attention • ${optimizedCount} optimized${errorCount ? ` • ${errorCount} couldn't verify` : ''}`, PAD, INNER_W, COLORS.yellow, 700, 21, 30);
+    if (lineupCount) {
+      drawWrapped(`${lineupCount} lineup ${lineupCount === 1 ? 'needs' : 'need'} changes`, PAD, INNER_W, COLORS.red, 700, 21, 30);
+      if (spotCount || optimizedCount || errorCount) {
+        drawWrapped(
+          [
+            spotCount ? `${spotCount} spot-start only` : '',
+            optimizedCount ? `${optimizedCount} optimized` : '',
+            errorCount ? `${errorCount} couldn't verify` : ''
+          ].filter(Boolean).join(' • '),
+          PAD, INNER_W, COLORS.muted, 400, 19, 28
+        );
+      }
+    } else if (spotCount) {
+      drawWrapped(`${spotCount} lineup ${spotCount === 1 ? 'is' : 'are'} set • Spot Starts available`, PAD, INNER_W, COLORS.yellow, 700, 21, 30);
+      if (optimizedCount || errorCount) {
+        drawWrapped(
+          [
+            optimizedCount ? `${optimizedCount} optimized` : '',
+            errorCount ? `${errorCount} couldn't verify` : ''
+          ].filter(Boolean).join(' • '),
+          PAD, INNER_W, COLORS.muted, 400, 19, 28
+        );
+      }
     } else if (errorCount) {
       drawWrapped(`${optimizedCount} optimized • ${errorCount} couldn't verify`, PAD, INNER_W, COLORS.yellow, 700, 21, 30);
     } else {
@@ -747,7 +775,7 @@
 
       if (league.status === 'optimized') {
         const cardH = 145;
-        roundedRect(ctx, PAD, y, INNER_W, cardH, 18, COLORS.card, COLORS.border);
+        roundedRect(ctx, PAD, y, INNER_W, cardH, 18, COLORS.card, COLORS.green);
         y += CARD_PAD;
         drawWrapped(league.league, contentX, contentW, COLORS.text, 700, 24, 32);
         y += 5;
@@ -759,7 +787,7 @@
 
       if (league.status === 'error') {
         const cardH = 145;
-        roundedRect(ctx, PAD, y, INNER_W, cardH, 18, COLORS.card, COLORS.border);
+        roundedRect(ctx, PAD, y, INNER_W, cardH, 18, COLORS.card, COLORS.yellow);
         y += CARD_PAD;
         drawWrapped(league.league, contentX, contentW, COLORS.text, 700, 24, 32);
         y += 5;
@@ -769,13 +797,19 @@
         continue;
       }
 
+      const statusColor = league.status === 'lineup' ? COLORS.red : COLORS.yellow;
+      const statusText = league.status === 'lineup'
+        ? 'LINEUP CHANGES'
+        : 'LINEUP SET • SPOT STARTS AVAILABLE';
       const itemCount = (league.slotChanges || []).length + (league.sits || []).length + league.spotStarts.length;
-      const roughCardH = 130 + itemCount * 85;
+      const roughCardH = 165 + itemCount * 85;
 
-      roundedRect(ctx, PAD, y, INNER_W, roughCardH, 18, COLORS.card, COLORS.border);
+      roundedRect(ctx, PAD, y, INNER_W, roughCardH, 18, COLORS.card, statusColor);
       y += CARD_PAD;
       drawWrapped(league.league, contentX, contentW, COLORS.text, 700, 24, 32);
-      y += 8;
+      y += 5;
+      drawWrapped(statusText, contentX, contentW, statusColor, 700, 20, 29);
+      y += 5;
 
       if ((league.slotChanges || []).length || (league.sits || []).length) {
         drawWrapped('LINEUP', contentX, contentW, COLORS.muted, 700, 18, 26);
@@ -1088,14 +1122,19 @@
       const lineup = getLineupChanges(current, suggested);
       const spotStarts = getSpotStarts();
 
-      const needsAttention = lineup.slotChanges.length
-        || lineup.sits.length
-        || spotStarts.length;
+      const hasLineupChanges = Boolean(
+        lineup.slotChanges.length || lineup.sits.length
+      );
+      const status = hasLineupChanges
+        ? 'lineup'
+        : spotStarts.length
+          ? 'spot'
+          : 'optimized';
 
       leagueResults.push({
         rawLeague: rawLeagueName,
         league: rawLeagueName,
-        status: needsAttention ? 'attention' : 'optimized',
+        status,
         starts: lineup.starts,
         sits: lineup.sits,
         slotChanges: lineup.slotChanges,
@@ -1104,19 +1143,27 @@
     }
 
     const sortedLeagueResults = applyConfiguredOrder(leagueResults);
-    const attentionCount = sortedLeagueResults.filter(x => x.status === 'attention').length;
-    const optimizedCount = sortedLeagueResults.filter(x => x.status === 'optimized').length;    const errorCount = sortedLeagueResults.filter(x => x.status === 'error').length;
+    const lineupCount = sortedLeagueResults.filter(x => x.status === 'lineup').length;
+    const spotCount = sortedLeagueResults.filter(x => x.status === 'spot').length;
+    const optimizedCount = sortedLeagueResults.filter(x => x.status === 'optimized').length;
+    const errorCount = sortedLeagueResults.filter(x => x.status === 'error').length;
 
     removeBanner();
     const results = createResultsBox();
 
     let headerStatus = '';
 
-    if (attentionCount) {
+    if (lineupCount) {
       headerStatus = `
-        <div style="margin-top:6px;color:${COLORS.yellow};font-weight:600;">
-          ${attentionCount} need attention
-          <span style="color:${COLORS.muted};font-weight:400;">• ${optimizedCount} optimized${errorCount ? ` • ${errorCount} couldn't verify` : ''}</span>
+        <div style="margin-top:6px;color:${COLORS.red};font-weight:700;">
+          ${lineupCount} lineup ${lineupCount === 1 ? 'needs' : 'need'} changes
+          <span style="color:${COLORS.muted};font-weight:400;">${spotCount ? ` • ${spotCount} spot-start only` : ''}${optimizedCount ? ` • ${optimizedCount} optimized` : ''}${errorCount ? ` • ${errorCount} couldn't verify` : ''}</span>
+        </div>`;
+    } else if (spotCount) {
+      headerStatus = `
+        <div style="margin-top:6px;color:${COLORS.yellow};font-weight:700;">
+          ${spotCount} lineup ${spotCount === 1 ? 'is' : 'are'} set • Spot Starts available
+          <span style="color:${COLORS.muted};font-weight:400;">${optimizedCount ? ` • ${optimizedCount} optimized` : ''}${errorCount ? ` • ${errorCount} couldn't verify` : ''}</span>
         </div>`;
     } else if (errorCount) {
       headerStatus = `<div style="margin-top:6px;color:${COLORS.yellow};font-weight:600;">${optimizedCount} optimized • ${errorCount} couldn't verify</div>`;
@@ -1125,7 +1172,7 @@
     }
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Perry Lineup Check v1.0.17</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Perry Lineup Check v1.0.18</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       ${headerStatus}
       ${renderVersionNotice(versionNotice)}`;
