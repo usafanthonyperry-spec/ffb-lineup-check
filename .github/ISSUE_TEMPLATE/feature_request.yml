@@ -1,0 +1,63 @@
+name: Suggest an improvement
+description: Share an idea for improving FFB Fantasy Lineup Check
+title: "[Suggestion] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve FFB Fantasy Lineup Check. Please describe the idea clearly so it can be reviewed before any change is made.
+
+  - type: input
+    id: version
+    attributes:
+      label: Checker version
+      description: What version are you currently using? You can find it at the top of the results screen.
+      placeholder: "Example: v1.0.17"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: version_type
+    attributes:
+      label: Which checker are you using?
+      options:
+        - Public version
+        - Perry personal version
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: What would you like changed or added?
+      description: Describe the feature or improvement.
+      placeholder: "Example: Show..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefit
+    attributes:
+      label: Why would this be useful?
+      description: Explain what problem this solves or how it would make the checker better.
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example or mockup
+      description: Optional. Describe what you would expect to see, or drag in a screenshot.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the current results and this is still relevant to the latest version I am using.
+          required: true
