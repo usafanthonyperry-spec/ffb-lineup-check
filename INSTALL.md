@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.26 — Sep 29, 2026**
+**Current release: v1.0.27 — Sep 29, 2026**
 
 Public installer:
 
@@ -96,6 +96,8 @@ If there are no lineup changes, no Spot Starts, and no verification errors, the 
 
 If anything does need attention, the top of the report also shows a single **⚠️ X leagues need attention** count. This includes red lineup-change leagues, yellow Spot Starts leagues, and leagues that couldn't be verified.
 
+Starting in v1.0.27, the compact version/status/Hide Optimized area stays visible while you scroll. The checked-league count and timestamp stay below it so the sticky area remains small.
+
 ### Numbered lineup spots
 
 Numbered spots inside the same position are interchangeable.
@@ -125,7 +127,7 @@ Spot Starts show a higher-projected available option. They do not decide which u
 
 **🔄 Run Again** — reloads the Dashboard and performs a fresh scan.
 
-**🙈 Hide Optimized / 👀 Show Optimized** — appears near the top of mixed reports, directly under the status summary, when there is at least one green optimized league and at least one non-green league. The button includes the optimized count, such as **🙈 Hide 12 Optimized**. It only changes what is visible on screen; it does not change the scan, recommendations, copied summary, or shared image.
+**🙈 Hide Optimized / 👀 Show Optimized** — appears in the compact sticky summary on mixed reports when there is at least one green optimized league and at least one non-green league. The button includes the optimized count, such as **🙈 Hide 12 Optimized**. The checker remembers your last Hide/Show choice and applies it on your next mixed report. It only changes what is visible on screen; it does not change the scan, recommendations, copied summary, or shared image.
 
 **📋 Copy Summary** — copies a text version of the report, including the checked time and Needs Attention count when applicable.
 
