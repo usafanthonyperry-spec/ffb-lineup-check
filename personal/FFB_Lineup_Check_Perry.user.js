@@ -37,7 +37,11 @@
     'The Swim Shady',
     'The Megalabowl',
     'Astro Bot',
-    'Off With Their Heads'
+    'Off With Their Heads',
+    'Empire',
+    'Captain',
+    'Lovers',
+    'Free'
   ];
 
   const APP_VERSION = '1.0.21';
