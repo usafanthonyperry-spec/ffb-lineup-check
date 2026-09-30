@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.45
+// @version      1.0.46
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -29,7 +29,7 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.45';
+  const APP_VERSION = '1.0.46';
   const HIDE_OPTIMIZED_STORAGE_KEY = 'ffb-public-hide-optimized';
   // User-selected Chiefs photos, packed into a lightweight self-contained animated WebP slideshow.
   const UPDATE_INSTALL_URL = 'https://usafanthonyperry-spec.github.io/ffb-lineup-check/';
@@ -358,18 +358,21 @@
       .join('|');
   }
 
-  async function syncTeamAndWait(syncButton, timeoutMs = 7500) {
-    if (!syncButton) return;
+  async function syncTeamAndWait(syncButton, timeoutMs = 6500) {
+    if (!syncButton) return { elapsedMs: 0, reason: 'no-sync-button' };
 
-    const beforeFingerprint = lineupFingerprint(getLineup('current'));
     const startedAt = Date.now();
-    let lastFingerprint = beforeFingerprint;
-    let lastFingerprintChangedAt = startedAt;
+    const beforeCurrent = lineupFingerprint(getLineup('current'));
+    const beforeSuggested = lineupFingerprint(getLineup('optimized'));
+
+    let lastCurrent = beforeCurrent;
+    let lastSuggested = beforeSuggested;
+    let lastDataChangeAt = startedAt;
 
     syncButton.click();
 
     while (Date.now() - startedAt < timeoutMs) {
-      await sleep(250);
+      await sleep(200);
 
       const current = getLineup('current');
       const suggested = getLineup('optimized');
@@ -378,38 +381,40 @@
       const now = Date.now();
       const elapsed = now - startedAt;
       const currentFingerprint = lineupFingerprint(current);
+      const suggestedFingerprint = lineupFingerprint(suggested);
 
-      // Only real player/slot data changes count as a refresh. Cosmetic DOM
-      // redraws, highlights, spinners, and attribute mutations are ignored.
-      if (currentFingerprint !== lastFingerprint) {
-        lastFingerprint = currentFingerprint;
-        lastFingerprintChangedAt = now;
+      if (currentFingerprint !== lastCurrent || suggestedFingerprint !== lastSuggested) {
+        lastCurrent = currentFingerprint;
+        lastSuggested = suggestedFingerprint;
+        lastDataChangeAt = now;
       }
 
-      const changedFromBefore = currentFingerprint !== beforeFingerprint;
-      const fingerprintStableFor = now - lastFingerprintChangedAt;
+      const currentChanged = currentFingerprint !== beforeCurrent;
+      const suggestedChanged = suggestedFingerprint !== beforeSuggested;
+      const stableFor = now - lastDataChangeAt;
 
-      const liveSyncButton = Array.from(document.querySelectorAll('button'))
-        .find(b => b.innerText.trim() === 'Sync Team');
-
-      const buttonBusy = Boolean(
-        liveSyncButton?.disabled
-        || liveSyncButton?.getAttribute('aria-busy') === 'true'
-        || /syncing|loading|updating/i.test(liveSyncButton?.innerText || '')
-      );
-
-      // If the synced Current lineup actually changed, require that exact
-      // player/slot fingerprint to remain stable before using it.
-      if (changedFromBefore && fingerprintStableFor >= 600 && !buttonBusy && elapsed >= 1000) {
-        return;
+      // Strong signal: the actual Current lineup changed. Once the real
+      // player/slot data settles, move on even if FFB leaves its button in a
+      // misleading busy state.
+      if (currentChanged && stableFor >= 600 && elapsed >= 1000) {
+        return { elapsedMs: elapsed, reason: 'current-changed' };
       }
 
-      // If the lineup is already synced and therefore never changes, ignore
-      // cosmetic redraws completely and wait the full fallback period.
-      if (!changedFromBefore && !buttonBusy && elapsed >= 3500) {
-        return;
+      // If FFB refreshed only the optimized side, let both roster fingerprints
+      // settle before moving on.
+      if (suggestedChanged && stableFor >= 750 && elapsed >= 1800) {
+        return { elapsedMs: elapsed, reason: 'optimizer-refreshed' };
+      }
+
+      // Already-synced leagues may have no player changes at all. Do not wait
+      // on the Sync button state forever; once both populated rosters have
+      // remained stable, use a conservative capped fallback.
+      if (!currentChanged && !suggestedChanged && stableFor >= 900 && elapsed >= 4000) {
+        return { elapsedMs: elapsed, reason: 'stable-unchanged' };
       }
     }
+
+    return { elapsedMs: Date.now() - startedAt, reason: 'timeout' };
   }
 
   function getLineupChanges(current, suggested) {
@@ -616,7 +621,7 @@
     if (league.status === 'optimized') {
       return `
         <div data-ffb-status="optimized" style="margin-top:10px;padding:10px 12px;background:${COLORS.card};border:2px solid ${COLORS.green};border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <div style="font-weight:700;min-width:0;">${escapeHTML(league.league)}</div>
+          <div style="font-weight:700;min-width:0;">${escapeHTML(league.league)}${league.timingMs != null ? ` <span style="color:${COLORS.muted};font-size:11px;font-weight:500;">⏱ ${escapeHTML(formatDurationMs(league.timingMs))}</span>` : ''}</div>
           <div style="color:${COLORS.green};font-weight:700;white-space:nowrap;">✓ OPTIMIZED</div>
         </div>`;
     }
@@ -624,7 +629,7 @@
     if (league.status === 'error') {
       return `
         <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:2px solid ${COLORS.yellow};border-radius:12px;">
-          <div style="font-weight:700;margin-bottom:8px;">${escapeHTML(league.league)}</div>
+          <div style="font-weight:700;margin-bottom:8px;">${escapeHTML(league.league)}${league.timingMs != null ? ` <span style="color:${COLORS.muted};font-size:11px;font-weight:500;">⏱ ${escapeHTML(formatDurationMs(league.timingMs))}</span>` : ''}</div>
           <div style="color:${COLORS.yellow};font-weight:700;">COULDN'T VERIFY</div>
           <div style="margin-top:3px;color:${COLORS.muted};">${escapeHTML(league.error || 'Could not read lineup.')}</div>
         </div>`;
@@ -637,8 +642,9 @@
 
     let html = `
       <div style="margin-top:14px;padding:14px;background:${COLORS.card};border:2px solid ${cardColor};border-radius:12px;">
-        <div style="font-weight:700;margin-bottom:6px;">${escapeHTML(league.league)}</div>
-        <div style="color:${cardColor};font-weight:700;margin-bottom:8px;">${statusLabel}</div>`;
+        <div style="font-weight:700;margin-bottom:6px;">${escapeHTML(league.league)}${league.timingMs != null ? ` <span style="color:${COLORS.muted};font-size:11px;font-weight:500;">⏱ ${escapeHTML(formatDurationMs(league.timingMs))}</span>` : ''}</div>
+        <div style="color:${cardColor};font-weight:700;margin-bottom:8px;">${statusLabel}</div>
+        ${league.syncReason ? `<div style="margin-top:-4px;margin-bottom:7px;color:${COLORS.muted};font-size:11px;">sync ${escapeHTML(formatDurationMs(league.syncMs))} • ${escapeHTML(syncReasonLabel(league.syncReason))}</div>` : ''}`;
 
     if ((league.slotChanges || []).length || (league.sits || []).length) {
       html += `<div style="color:${COLORS.muted};font-weight:600;margin-bottom:4px;">LINEUP</div>`;
@@ -806,7 +812,7 @@
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
     const attentionCount = lineupCount + spotCount + errorCount;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.45', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.46', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -1021,7 +1027,7 @@
         ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Fantasy Lineup Check v1.0.45`,
+      `🏈 Fantasy Lineup Check v1.0.46`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       attentionCount ? `⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention` : '',
@@ -1247,7 +1253,28 @@
   }
 
 
+  function formatDurationMs(ms) {
+    const seconds = Math.max(0, Number(ms) || 0) / 1000;
+    if (seconds < 60) return seconds.toFixed(1) + 's';
+
+    const minutes = Math.floor(seconds / 60);
+    const remainder = Math.round(seconds % 60);
+    return minutes + ':' + String(remainder).padStart(2, '0');
+  }
+
+  function syncReasonLabel(reason) {
+    return ({
+      'current-changed': 'lineup refreshed',
+      'optimizer-refreshed': 'optimizer refreshed',
+      'stable-unchanged': 'already synced',
+      'timeout': 'sync timeout',
+      'no-sync-button': 'no Sync button'
+    })[reason] || String(reason || 'sync');
+  }
+
+
   try {
+    const scanStartedAt = Date.now();
     showBanner('🏈 Loading Fantasy Dashboard…');
     await sleep(750);
 
@@ -1299,6 +1326,9 @@
     let checkedCount = 0;
 
     for (let i = 0; i < teamCount; i++) {
+      const leagueStartedAt = Date.now();
+      let syncTiming = { elapsedMs: 0, reason: 'no-sync-button' };
+
       if (optimizerUnavailable()) {
         showOptimizerUnavailable();
         return;
@@ -1332,7 +1362,7 @@
         .find(b => b.innerText.trim() === 'Sync Team');
 
       if (syncButton) {
-        await syncTeamAndWait(syncButton);
+        syncTiming = await syncTeamAndWait(syncButton);
       }
 
       if (optimizerUnavailable()) {
@@ -1348,7 +1378,10 @@
           rawLeague: rawLeagueName,
           league: rawLeagueName,
           status: 'error',
-          error: 'Could not read lineup.'
+          error: 'Could not read lineup.',
+          timingMs: Date.now() - leagueStartedAt,
+          syncMs: syncTiming.elapsedMs,
+          syncReason: syncTiming.reason
         });
         continue;
       }
@@ -1374,7 +1407,10 @@
         starts: lineup.starts,
         sits: lineup.sits,
         slotChanges: lineup.slotChanges,
-        spotStarts
+        spotStarts,
+        timingMs: Date.now() - leagueStartedAt,
+        syncMs: syncTiming.elapsedMs,
+        syncReason: syncTiming.reason
       });
     }
 
@@ -1385,6 +1421,14 @@
     const errorCount = sortedLeagueResults.filter(x => x.status === 'error').length;
     const attentionCount = lineupCount + spotCount + errorCount;
     const checkedAt = formatCheckedAt();
+    const totalScanMs = Date.now() - scanStartedAt;
+    const timedLeagues = sortedLeagueResults.filter(x => Number.isFinite(Number(x.timingMs)));
+    const averageLeagueMs = timedLeagues.length
+      ? timedLeagues.reduce((sum, league) => sum + Number(league.timingMs || 0), 0) / timedLeagues.length
+      : 0;
+    const slowestLeague = timedLeagues
+      .slice()
+      .sort((a, b) => Number(b.timingMs || 0) - Number(a.timingMs || 0))[0] || null;
 
     removeBanner();
     const results = createResultsBox();
@@ -1436,7 +1480,8 @@
         ${optimizedToggleHTML}
       </div>
       <div style="margin-top:12px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
-      <div style="margin-top:2px;color:${COLORS.muted};font-size:13px;">Checked ${escapeHTML(checkedAt)}</div>`;
+      <div style="margin-top:2px;color:${COLORS.muted};font-size:13px;">Checked ${escapeHTML(checkedAt)}</div>
+      <div style="margin-top:2px;color:${COLORS.muted};font-size:13px;">⏱ Scan ${escapeHTML(formatDurationMs(totalScanMs))} • avg ${escapeHTML(formatDurationMs(averageLeagueMs))}/league${slowestLeague ? ` • slowest ${escapeHTML(slowestLeague.league)} ${escapeHTML(formatDurationMs(slowestLeague.timingMs))}` : ''}</div>`;
 
     for (const league of sortedLeagueResults) html += renderLeagueCard(league);
 
