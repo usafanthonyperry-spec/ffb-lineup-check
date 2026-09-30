@@ -2,7 +2,7 @@
 
 An iPhone/Safari helper for The Fantasy Footballers Ultimate Dashboard. It checks every synced league for lineup changes, FLEX/SFLEX placement, Spot Starts, and already-optimized leagues.
 
-**Current release: v1.0.31 — Sep 30, 2026**
+**Current release: v1.0.32 — Sep 30, 2026**
 
 ## Install
 
@@ -48,6 +48,12 @@ Numbered slots inside the same position are treated as equivalent. A player alre
 - **💡 Suggest** and **🐛 Report Bug** links inside completed results.
 - Counts the first successful public checker run from each browser so public adoption can be estimated.
 
+## v1.0.32 changes
+
+- Simplifies the sticky title to **🏈 Fantasy Lineup Check**; the current version remains directly underneath in the **✓ current / ⬆️ Update available** status line.
+- Updates the shared **Fantasy Lineup Check** and **Check FFB Rankings** Shortcut links.
+- Sticky behavior, remembered **Hide Optimized / Show Optimized** preference, lineup comparison, and Spot Starts logic are unchanged.
+
 ## v1.0.31 changes
 
 - Removes the old one-time **✅ Updated to vX.X.X** banner from the body of the results.
@@ -80,8 +86,8 @@ https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-
 
 ## Shared Shortcuts
 
-- Fantasy Lineup Check: https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29
-- Check FFB Rankings: https://www.icloud.com/shortcuts/dd78ca052ecd4d98979dd2f810dced70
+- Fantasy Lineup Check: https://www.icloud.com/shortcuts/5bc97e0ba2c0430788bae3c006ec9632
+- Check FFB Rankings: https://www.icloud.com/shortcuts/c3d40660dff545209949c77315b08b91
 
 The main Shortcut checks `latest.txt`, shows the latest available checker version, then opens the Ultimate Dashboard. For the in-checker update status, the Dashboard URL should include `?ffb_latest=[Contents of URL]`, using the same version value returned by `latest.txt`. The userscript does the actual lineup scan.
 
