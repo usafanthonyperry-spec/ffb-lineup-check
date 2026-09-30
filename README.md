@@ -64,3 +64,7 @@ Increment `@version` in BOTH:
 - `FFB_Lineup_Check.meta.js`
 
 Then publish both files to the same URLs.
+
+## Update notifications
+
+The launcher page announces a newly published release with a brief text notice before redirecting to the Ultimate Dashboard. Users can compare that release number with the version displayed in their checker header and reinstall from the public installer when needed.
