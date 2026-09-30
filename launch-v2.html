@@ -15,50 +15,41 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
 .card{max-width:520px;width:100%;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px}
 h2{margin:0 0 10px;font-size:24px}
 p{color:var(--muted);line-height:1.45;margin:8px 0}
-.update{color:var(--yellow);font-weight:800;font-size:21px;line-height:1.35}
+.latest{color:var(--yellow);font-weight:800;font-size:21px;line-height:1.35}
 </style>
 </head>
 <body>
 <div class="card">
   <h2>🏈 Fantasy Lineup Check</h2>
-  <div id="status"><p>Checking for updates…</p></div>
+  <div id="status"><p>Checking latest release…</p></div>
 </div>
 <script>
 (async () => {
   const status = document.getElementById("status");
-  const STORAGE_KEY = "ffb-last-announced-release-v2";
   const dashboard = "https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/";
 
-  const go = (delay) => setTimeout(() => location.replace(dashboard), delay);
-
   try {
-    const response = await fetch("./version.json?t=" + Date.now(), {
-      cache: "no-store"
-    });
-
+    const response = await fetch("./version.json?t=" + Date.now(), { cache: "no-store" });
     if (!response.ok) throw new Error("version request failed");
 
     const info = await response.json();
     const latest = String(info.version || "").trim();
-    let last = "";
-    try { last = localStorage.getItem(STORAGE_KEY) || ""; } catch (_) {}
 
-    if (latest && latest !== last) {
+    if (latest) {
       status.innerHTML =
-        '<div class="update">⬆️ New version available — v' + latest + '</div>' +
-        '<p>Compare this with the version shown at the top of your lineup-checker results.</p>' +
-        '<p>Opening the Dashboard…</p>';
-      try { localStorage.setItem(STORAGE_KEY, latest); } catch (_) {}
-      go(4500);
-      return;
+        '<div class="latest">Latest release: v' + latest + '</div>' +
+        '<p>Compare this with the version shown in your checker header.</p>' +
+        '<p>If your installed version is lower, update from the installer page.</p>';
+    } else {
+      status.innerHTML = "<p>Latest version unavailable.</p>";
     }
-
-    status.innerHTML = "<p>Opening the Ultimate Dashboard…</p>";
-    go(350);
   } catch (_) {
-    status.innerHTML = "<p>Opening the Ultimate Dashboard…</p>";
-    go(350);
+    status.innerHTML = "<p>Latest version unavailable.</p>";
   }
+
+  setTimeout(() => {
+    location.replace(dashboard);
+  }, 3000);
 })();
 </script>
 </body>
