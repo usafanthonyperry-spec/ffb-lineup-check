@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- deploy: v1.0.22-refresh -->
+<!-- deploy: v1.0.23-refresh -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -31,7 +31,7 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
 <main>
 <h1>🏈 FFB Fantasy Lineup Check</h1>
 <p class="lead">Check every synced Fantasy Footballers league for lineup changes, FLEX/SFLEX placement, and Spot Starts — then share the whole report as one image.</p>
-<p class="small" style="margin-top:-12px;margin-bottom:6px;"><strong>Current version: v1.0.22</strong></p>
+<p class="small" style="margin-top:-12px;margin-bottom:6px;"><strong>Current version: v1.0.23</strong></p>
 <p class="small" style="margin-top:0;margin-bottom:18px;">Released Sep 29, 2026</p>
 
 <div class="card">
@@ -41,8 +41,8 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
 </div>
 
 <div class="card notice">
-  <h2>What’s new in v1.0.22</h2>
-  <p class="small">The checker now ignores meaningless numbered-slot reshuffles. If a player is already in the same position type — for example WR 2 instead of WR 1 — it will no longer tell you to move them just to match the Dashboard’s numbering.</p>
+  <h2>What’s new in v1.0.23</h2>
+  <p class="small">Adds a privacy-light public usage counter so we can tell whether the public checker is actually being used. It counts only the first successful public checker run from a browser. The Perry/private build is not counted.</p>
 </div>
 
 <div class="card">
@@ -71,6 +71,11 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
   <h2>Add the Fantasy Lineup Check Shortcut</h2>
   <p class="small">This Shortcut checks the latest published checker version, shows it in a notification, then opens the Ultimate Dashboard. Userscripts runs the checker automatically.</p>
   <a class="btn blue" href="https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29">Add Fantasy Lineup Check Shortcut</a>
+</div>
+
+<div class="card">
+  <h2>Public usage counter</h2>
+  <p class="small">After the first successful public checker run in a browser, the checker sends one anonymous counter hit. No league names, players, Sleeper IDs, passwords, or lineup data are sent. A local browser flag prevents repeat runs from counting again.</p>
 </div>
 
 <div class="card">
