@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.26
+// @version      1.0.27
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -24,8 +24,9 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.26';
+  const APP_VERSION = '1.0.27';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
+  const HIDE_OPTIMIZED_STORAGE_KEY = 'ffb-public-hide-optimized';
   const PUBLIC_USE_COUNT_KEY = 'ffb-public-use-counted-v1';
   const PUBLIC_USE_COUNTER_URL = 'https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-use.svg?label=public%20uses&color=54d17a';
 
@@ -745,7 +746,7 @@
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
     const attentionCount = lineupCount + spotCount + errorCount;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.26', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.27', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -960,7 +961,7 @@
         ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Fantasy Lineup Check v1.0.26`,
+      `🏈 Fantasy Lineup Check v1.0.27`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       attentionCount ? `⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention` : '',
@@ -1356,20 +1357,27 @@
       </div>`;
 
     const showOptimizedToggle = optimizedCount > 0 && optimizedCount < sortedLeagueResults.length;
+    let optimizedHiddenPreference = false;
+    try {
+      optimizedHiddenPreference = localStorage.getItem(HIDE_OPTIMIZED_STORAGE_KEY) === '1';
+    } catch (_) {}
+
     const optimizedToggleHTML = showOptimizedToggle
       ? `
-        <button id="ffb-toggle-optimized" type="button" style="width:100%;margin-top:10px;padding:10px 12px;font-size:14px;font-weight:700;border-radius:10px;border:1px solid ${COLORS.border};background:${COLORS.card2};color:${COLORS.text};">
-          🙈 Hide ${optimizedCount} Optimized
+        <button id="ffb-toggle-optimized" type="button" style="width:100%;margin-top:8px;padding:9px 11px;font-size:13px;font-weight:700;border-radius:9px;border:1px solid ${COLORS.border};background:${COLORS.card2};color:${COLORS.text};">
+          ${optimizedHiddenPreference ? '👀 Show' : '🙈 Hide'} ${optimizedCount} Optimized
         </button>`
       : '';
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.26</div>
-      <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
+      <div id="ffb-sticky-summary" style="position:sticky;top:-18px;z-index:5;margin:-18px -18px 0;padding:13px 18px 11px;background:${COLORS.bg};border-bottom:1px solid ${COLORS.border};box-shadow:0 5px 12px rgba(0,0,0,.24);">
+        <div style="font-size:16px;font-weight:800;">🏈 Fantasy Lineup Check v1.0.27</div>
+        ${attentionCount ? `<div style="margin-top:5px;color:${COLORS.yellow};font-size:14px;font-weight:800;">⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention</div>` : ''}
+        ${headerStatus}
+        ${optimizedToggleHTML}
+      </div>
+      <div style="margin-top:12px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       <div style="margin-top:2px;color:${COLORS.muted};font-size:13px;">Checked ${escapeHTML(checkedAt)}</div>
-      ${attentionCount ? `<div style="margin-top:7px;color:${COLORS.yellow};font-weight:800;">⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention</div>` : ''}
-      ${headerStatus}
-      ${optimizedToggleHTML}
       ${renderVersionNotice(versionNotice)}`;
 
     for (const league of sortedLeagueResults) html += renderLeagueCard(league);
@@ -1389,11 +1397,9 @@
     const toggleOptimized = results.querySelector('#ffb-toggle-optimized');
     if (toggleOptimized) {
       const optimizedCards = Array.from(results.querySelectorAll('[data-ffb-status="optimized"]'));
-      let optimizedHidden = false;
+      let optimizedHidden = optimizedHiddenPreference;
 
-      toggleOptimized.onclick = () => {
-        optimizedHidden = !optimizedHidden;
-
+      const applyOptimizedVisibility = () => {
         for (const card of optimizedCards) {
           card.style.display = optimizedHidden ? 'none' : 'flex';
         }
@@ -1401,6 +1407,18 @@
         toggleOptimized.textContent = optimizedHidden
           ? `👀 Show ${optimizedCards.length} Optimized`
           : `🙈 Hide ${optimizedCards.length} Optimized`;
+      };
+
+      applyOptimizedVisibility();
+
+      toggleOptimized.onclick = () => {
+        optimizedHidden = !optimizedHidden;
+
+        try {
+          localStorage.setItem(HIDE_OPTIMIZED_STORAGE_KEY, optimizedHidden ? '1' : '0');
+        } catch (_) {}
+
+        applyOptimizedVisibility();
       };
     }
 
