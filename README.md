@@ -65,13 +65,17 @@ Suggestions and bug reports are reviewed before changes are released.
 
 ## Maintainer release checklist
 
-For each new release:
+For **every checker release**, documentation updates are part of the release and should be completed at the same time:
 
 1. Update `@version` in the public and Perry userscripts and metadata files.
 2. Update `version.json`, `personal/version.json`, and `latest.txt`.
-3. Update the visible version/date and **What's New** text on the installer pages.
-4. Update these release notes if behavior changed.
-5. Let GitHub Pages finish deploying before sharing fresh installer links.
+3. Update the visible version/date and **What's New** text on the public and Perry installer pages.
+4. Update `README.md` with the current release and a short description of what changed.
+5. Update `INSTALL.md` anywhere the new release changes setup, behavior, buttons, results, troubleshooting, or update instructions.
+6. Confirm all public links and Shortcut links are still current.
+7. Let GitHub Pages finish deploying before sharing fresh installer links.
+
+**A checker update is not considered finished until the GitHub instructions match the released version.**
 
 Creator-only test Shortcut:
 
