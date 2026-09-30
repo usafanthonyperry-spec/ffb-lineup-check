@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- deploy: v1.0.32-refresh -->
+<!-- deploy: v1.0.33-refresh -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -31,7 +31,7 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
 <main>
 <h1>🏈 FFB Fantasy Lineup Check</h1>
 <p class="lead">Check every synced Fantasy Footballers league for lineup changes, FLEX/SFLEX placement, and Spot Starts — then share the whole report as one image.</p>
-<p class="small" style="margin-top:-12px;margin-bottom:6px;"><strong>Current version: v1.0.32</strong></p>
+<p class="small" style="margin-top:-12px;margin-bottom:6px;"><strong>Current version: v1.0.33</strong></p>
 <p class="small" style="margin-top:0;margin-bottom:18px;">Released Sep 30, 2026</p>
 
 <div class="card">
@@ -41,8 +41,8 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
 </div>
 
 <div class="card notice">
-  <h2>What’s new in v1.0.32</h2>
-  <p class="small">Simplifies the sticky title to <strong>🏈 Fantasy Lineup Check</strong>; the current version stays on the status line directly underneath. The shared Shortcut links are also refreshed. The remembered <strong>Hide Optimized</strong> setting and lineup/Spot Starts logic are unchanged.</p>
+  <h2>What’s new in v1.0.33</h2>
+  <p class="small">Updates the setup and update instructions to match the current Shortcut flow. The Shortcut no longer needs to show a version notification; it passes <strong>ffb_latest</strong> to the checker, and the sticky header shows <strong>✓ current</strong> or <strong>⬆️ Update available</strong>. Checker behavior is otherwise unchanged.</p>
 </div>
 
 <div class="card">
@@ -63,13 +63,13 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
   <div class="step">TAP 2</div>
   <h2>Install the checker</h2>
   <p class="small">Open the script in Safari. Then open Safari's Userscripts extension and confirm Install.</p>
-  <a class="btn" href="./FFB_Lineup_Check.user.js?v=1.0.32">Install FFB Lineup Checker</a>
+  <a class="btn" href="./FFB_Lineup_Check.user.js?v=1.0.33">Install FFB Lineup Checker</a>
 </div>
 
 <div class="card">
   <div class="step">TAP 3</div>
   <h2>Add the Fantasy Lineup Check Shortcut</h2>
-  <p class="small">This Shortcut checks the latest published checker version, shows it in a notification, then opens the Ultimate Dashboard. For the on-screen update indicator in v1.0.29, existing Shortcut installs need one one-time Dashboard URL edit so that same version is passed as <strong>ffb_latest</strong>. The full guide shows the exact change.</p>
+  <p class="small">This Shortcut checks the latest published checker version, passes it into the Ultimate Dashboard URL as <strong>ffb_latest</strong>, then opens the Dashboard. The checker uses that value to show <strong>✓ current</strong> or <strong>⬆️ Update available</strong> in the sticky header. No version notification is required.</p>
   <a class="btn blue" href="https://www.icloud.com/shortcuts/5bc97e0ba2c0430788bae3c006ec9632">Add Fantasy Lineup Check Shortcut</a>
 </div>
 
@@ -80,7 +80,7 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
 
 <div class="card">
   <h2>How updates work</h2>
-  <p class="small">Each time you run the Shortcut, it shows the <strong>latest available FFB version</strong>. Compare that number with the version shown at the top of your checker results. If your installed version is lower, return here and reinstall the checker.</p>
+  <p class="small">Each time you run the Shortcut, it checks the latest published version and passes it to the checker automatically. If you are current, the sticky header shows <strong>✓ vX.X.X current</strong>. If a newer release exists, it shows <strong>⬆️ Update available — vX.X.X</strong> with an <strong>Install Update</strong> link.</p>
 </div>
 
 <div class="card notice">
