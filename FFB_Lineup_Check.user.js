@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.24
+// @version      1.0.25
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -24,7 +24,7 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.24';
+  const APP_VERSION = '1.0.25';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
   const PUBLIC_USE_COUNT_KEY = 'ffb-public-use-counted-v1';
   const PUBLIC_USE_COUNTER_URL = 'https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-use.svg?label=public%20uses&color=54d17a';
@@ -744,7 +744,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.24', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.25', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -955,7 +955,7 @@
         ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Fantasy Lineup Check v1.0.24`,
+      `🏈 Fantasy Lineup Check v1.0.25`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       counts,
@@ -1096,30 +1096,6 @@
     results.appendChild(rerun);
 
     if (shareModel) {
-      const optimizedCards = Array.from(results.querySelectorAll('[data-ffb-status="optimized"]'));
-      if (optimizedCards.length && optimizedCards.length < shareModel.leagues.length) {
-        const toggleOptimized = makeButton('🙈 Hide Optimized', COLORS.card2);
-        let optimizedHidden = false;
-
-        toggleOptimized.onclick = () => {
-          optimizedHidden = !optimizedHidden;
-
-          for (const card of optimizedCards) {
-            if (optimizedHidden) {
-              card.dataset.ffbPreviousDisplay = card.style.display || '';
-              card.style.display = 'none';
-            } else {
-              card.style.display = card.dataset.ffbPreviousDisplay || '';
-            }
-          }
-
-          toggleOptimized.textContent = optimizedHidden
-            ? '👀 Show Optimized'
-            : '🙈 Hide Optimized';
-        };
-
-        results.appendChild(toggleOptimized);
-      }
       const copy = makeButton('📋 Copy Summary', COLORS.card2);
       copy.onclick = () => copySummary(shareModel, copy);
       results.appendChild(copy);
@@ -1372,11 +1348,20 @@
         ${headerParts.join(`<span style="color:${COLORS.muted};font-weight:400;"> • </span>`)}
       </div>`;
 
+    const showOptimizedToggle = optimizedCount > 0 && optimizedCount < sortedLeagueResults.length;
+    const optimizedToggleHTML = showOptimizedToggle
+      ? `
+        <button id="ffb-toggle-optimized" type="button" style="width:100%;margin-top:10px;padding:10px 12px;font-size:14px;font-weight:700;border-radius:10px;border:1px solid ${COLORS.border};background:${COLORS.card2};color:${COLORS.text};">
+          🙈 Hide ${optimizedCount} Optimized
+        </button>`
+      : '';
+
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.24</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.25</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       <div style="margin-top:2px;color:${COLORS.muted};font-size:13px;">Checked ${escapeHTML(checkedAt)}</div>
       ${headerStatus}
+      ${optimizedToggleHTML}
       ${renderVersionNotice(versionNotice)}`;
 
     for (const league of sortedLeagueResults) html += renderLeagueCard(league);
@@ -1392,6 +1377,24 @@
     }
 
     results.innerHTML = html;
+
+    const toggleOptimized = results.querySelector('#ffb-toggle-optimized');
+    if (toggleOptimized) {
+      const optimizedCards = Array.from(results.querySelectorAll('[data-ffb-status="optimized"]'));
+      let optimizedHidden = false;
+
+      toggleOptimized.onclick = () => {
+        optimizedHidden = !optimizedHidden;
+
+        for (const card of optimizedCards) {
+          card.style.display = optimizedHidden ? 'none' : 'flex';
+        }
+
+        toggleOptimized.textContent = optimizedHidden
+          ? `👀 Show ${optimizedCards.length} Optimized`
+          : `🙈 Hide ${optimizedCards.length} Optimized`;
+      };
+    }
 
     const shareModel = {
       checkedCount,
