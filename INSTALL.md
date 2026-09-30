@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.22 — Sep 29, 2026**
+**Current release: v1.0.23 — Sep 29, 2026**
 
 Public installer:
 
@@ -174,6 +174,12 @@ That handoff depends on iOS/Sleeper link handling. The lineup report is unaffect
 The checker reads information already visible on the Fantasy Footballers Dashboard you are signed into.
 
 It does not require you to place your Fantasy Footballers password, Sleeper password, Sleeper username, or league IDs in the script.
+
+Starting with v1.0.23, the **public build only** records one anonymous usage count after a browser completes its first successful lineup scan. A local browser flag prevents later runs from counting again. The counter does not send league names, players, Sleeper IDs, passwords, or lineup data. The Perry/private build is excluded.
+
+Public counter statistics:
+
+https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-use/
 
 Never paste account passwords into a userscript or shared Shortcut.
 
