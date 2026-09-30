@@ -1,12 +1,11 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.23
+// @version      1.0.24
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
 // @match        https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/*
-// @match        https://usafanthonyperry-spec.github.io/ffb-lineup-check/launch.html*
 // @run-at       document-idle
 // @grant        none
 // @noframes
@@ -25,25 +24,11 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.23';
+  const APP_VERSION = '1.0.24';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
   const PUBLIC_USE_COUNT_KEY = 'ffb-public-use-counted-v1';
   const PUBLIC_USE_COUNTER_URL = 'https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-use.svg?label=public%20uses&color=54d17a';
 
-  const IS_LAUNCHER = location.hostname === 'usafanthonyperry-spec.github.io'
-    && location.pathname.endsWith('/ffb-lineup-check/launch.html');
-
-  if (IS_LAUNCHER) {
-    const latest = document.querySelector('meta[name="ffb-latest"]')?.content?.trim() || '';
-
-    if (latest && compareVersions(latest, APP_VERSION) > 0) {
-      alert(`⬆️ Update available — v${latest}\nYou’re using v${APP_VERSION}.`);
-    }
-
-    window.dispatchEvent(new CustomEvent('ffb-version-checked'));
-    window.__ffbLineupCheckRunning = false;
-    return;
-  }
 
   const COLORS = {
     bg: '#111315',
@@ -759,7 +744,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.23', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.24', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -774,17 +759,23 @@
       summarySegments.push({ text, color, weight });
     };
 
-    if (lineupCount) {
-      addSummaryPart(`${lineupCount} lineup ${lineupCount === 1 ? 'change' : 'changes'}`, COLORS.red);
-    }
-    if (spotCount) {
-      addSummaryPart(`${spotCount} Spot Start${spotCount === 1 ? '' : 's'}`, COLORS.yellow);
-    }
-    if (optimizedCount) {
-      addSummaryPart(`${optimizedCount} optimized`, COLORS.green);
-    }
-    if (errorCount) {
-      addSummaryPart(`${errorCount} couldn't verify`, COLORS.yellow, 600);
+    const allClear = !lineupCount && !spotCount && !errorCount && optimizedCount > 0;
+
+    if (allClear) {
+      addSummaryPart('✅ All leagues optimized', COLORS.green);
+    } else {
+      if (lineupCount) {
+        addSummaryPart(`${lineupCount} lineup ${lineupCount === 1 ? 'change' : 'changes'}`, COLORS.red);
+      }
+      if (spotCount) {
+        addSummaryPart(`${spotCount} Spot Start${spotCount === 1 ? '' : 's'}`, COLORS.yellow);
+      }
+      if (optimizedCount) {
+        addSummaryPart(`${optimizedCount} optimized`, COLORS.green);
+      }
+      if (errorCount) {
+        addSummaryPart(`${errorCount} couldn't verify`, COLORS.yellow, 600);
+      }
     }
 
     if (summarySegments.length) {
@@ -953,15 +944,18 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    const counts = [
-      lineupCount ? `🔴 ${lineupCount} lineup ${lineupCount === 1 ? 'change' : 'changes'}` : '',
-      spotCount ? `🟡 ${spotCount} Spot Start${spotCount === 1 ? '' : 's'}` : '',
-      optimizedCount ? `🟢 ${optimizedCount} optimized` : '',
-      errorCount ? `⚠️ ${errorCount} couldn't verify` : ''
-    ].filter(Boolean).join(' • ');
+    const allClear = !lineupCount && !spotCount && !errorCount && optimizedCount > 0;
+    const counts = allClear
+      ? '✅ All leagues optimized'
+      : [
+          lineupCount ? `🔴 ${lineupCount} lineup ${lineupCount === 1 ? 'change' : 'changes'}` : '',
+          spotCount ? `🟡 ${spotCount} Spot Start${spotCount === 1 ? '' : 's'}` : '',
+          optimizedCount ? `🟢 ${optimizedCount} optimized` : '',
+          errorCount ? `⚠️ ${errorCount} couldn't verify` : ''
+        ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Fantasy Lineup Check v1.0.23`,
+      `🏈 Fantasy Lineup Check v1.0.24`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       counts,
@@ -1102,6 +1096,30 @@
     results.appendChild(rerun);
 
     if (shareModel) {
+      const optimizedCards = Array.from(results.querySelectorAll('[data-ffb-status="optimized"]'));
+      if (optimizedCards.length && optimizedCards.length < shareModel.leagues.length) {
+        const toggleOptimized = makeButton('🙈 Hide Optimized', COLORS.card2);
+        let optimizedHidden = false;
+
+        toggleOptimized.onclick = () => {
+          optimizedHidden = !optimizedHidden;
+
+          for (const card of optimizedCards) {
+            if (optimizedHidden) {
+              card.dataset.ffbPreviousDisplay = card.style.display || '';
+              card.style.display = 'none';
+            } else {
+              card.style.display = card.dataset.ffbPreviousDisplay || '';
+            }
+          }
+
+          toggleOptimized.textContent = optimizedHidden
+            ? '👀 Show Optimized'
+            : '🙈 Hide Optimized';
+        };
+
+        results.appendChild(toggleOptimized);
+      }
       const copy = makeButton('📋 Copy Summary', COLORS.card2);
       copy.onclick = () => copySummary(shareModel, copy);
       results.appendChild(copy);
@@ -1330,18 +1348,23 @@
     const results = createResultsBox();
 
     const headerParts = [];
+    const allClear = !lineupCount && !spotCount && !errorCount && optimizedCount > 0;
 
-    if (lineupCount) {
-      headerParts.push(`<span style="color:${COLORS.red};font-weight:700;">🔴 ${lineupCount} lineup ${lineupCount === 1 ? 'change' : 'changes'}</span>`);
-    }
-    if (spotCount) {
-      headerParts.push(`<span style="color:${COLORS.yellow};font-weight:700;">🟡 ${spotCount} Spot Start${spotCount === 1 ? '' : 's'}</span>`);
-    }
-    if (optimizedCount) {
-      headerParts.push(`<span style="color:${COLORS.green};font-weight:700;">🟢 ${optimizedCount} optimized</span>`);
-    }
-    if (errorCount) {
-      headerParts.push(`<span style="color:${COLORS.yellow};font-weight:600;">⚠️ ${errorCount} couldn't verify</span>`);
+    if (allClear) {
+      headerParts.push(`<span style="color:${COLORS.green};font-weight:800;">✅ All leagues optimized</span>`);
+    } else {
+      if (lineupCount) {
+        headerParts.push(`<span style="color:${COLORS.red};font-weight:700;">🔴 ${lineupCount} lineup ${lineupCount === 1 ? 'change' : 'changes'}</span>`);
+      }
+      if (spotCount) {
+        headerParts.push(`<span style="color:${COLORS.yellow};font-weight:700;">🟡 ${spotCount} Spot Start${spotCount === 1 ? '' : 's'}</span>`);
+      }
+      if (optimizedCount) {
+        headerParts.push(`<span style="color:${COLORS.green};font-weight:700;">🟢 ${optimizedCount} optimized</span>`);
+      }
+      if (errorCount) {
+        headerParts.push(`<span style="color:${COLORS.yellow};font-weight:600;">⚠️ ${errorCount} couldn't verify</span>`);
+      }
     }
 
     const headerStatus = `
@@ -1350,7 +1373,7 @@
       </div>`;
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.23</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.24</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       <div style="margin-top:2px;color:${COLORS.muted};font-size:13px;">Checked ${escapeHTML(checkedAt)}</div>
       ${headerStatus}
