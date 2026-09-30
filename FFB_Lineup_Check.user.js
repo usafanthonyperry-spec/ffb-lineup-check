@@ -91,7 +91,7 @@
       return `
         <div id="ffb-update-status" style="margin-top:3px;color:${COLORS.yellow};font-size:12px;font-weight:800;">
           <span>⬆️ Update available — v${escapeHTML(latest)}</span>
-          <a href="https://usafanthonyperry-spec.github.io/ffb-lineup-check/" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-left:8px;color:${COLORS.yellow};text-decoration:underline;font-weight:800;">Install Update</a>
+          <a href="https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js?v=${encodeURIComponent(latest)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-left:8px;color:${COLORS.yellow};text-decoration:underline;font-weight:800;">Install Update</a>
         </div>`;
     }
 
