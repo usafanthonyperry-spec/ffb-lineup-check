@@ -2,7 +2,7 @@
 
 An iPhone/Safari helper for The Fantasy Footballers Ultimate Dashboard. It checks every synced league for lineup changes, FLEX/SFLEX placement, Spot Starts, and already-optimized leagues.
 
-**Current release: v1.0.35 — Sep 30, 2026**
+**Current release: v1.0.36 — Sep 30, 2026**
 
 ## Install
 
@@ -47,6 +47,16 @@ Numbered slots inside the same position are treated as equivalent. A player alre
 - **✅ All leagues optimized** summary when every verified league is clean.
 - **💡 Suggest** and **🐛 Report Bug** links inside completed results.
 - Counts the first successful public checker run from each browser so public adoption can be estimated.
+
+## v1.0.36 changes
+
+- Adds a lightweight **Patrick Mahomes three-ring loading animation** while the checker is actively interpreting leagues.
+- Uses a real WWE-hosted photo from the April 29, 2024 Raw segment and animates the image across the loading strip locally, avoiding a large GIF download.
+- The animation begins with the first league check and disappears immediately when the finished results replace the loading banner.
+- If the remote image cannot load, the normal text loading banner continues without breaking the scan.
+- No lineup comparison, Spot Starts, update-status, Shortcut, results-panel, or Hide Optimized behavior changed.
+
+Source media: https://www.wwe.com/videos/logan-paul-uses-patrick-mahomes-super-bowl-rings-as-a-weapon-raw-highlights-april-29-2024
 
 ## v1.0.35 changes
 
