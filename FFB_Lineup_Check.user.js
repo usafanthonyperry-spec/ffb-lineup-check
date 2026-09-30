@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.22
+// @version      1.0.23
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -25,8 +25,10 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.22';
+  const APP_VERSION = '1.0.23';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
+  const PUBLIC_USE_COUNT_KEY = 'ffb-public-use-counted-v1';
+  const PUBLIC_USE_COUNTER_URL = 'https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-use.svg?label=public%20uses&color=54d17a';
 
   const IS_LAUNCHER = location.hostname === 'usafanthonyperry-spec.github.io'
     && location.pathname.endsWith('/ffb-lineup-check/launch.html');
@@ -160,6 +162,37 @@
       })
       .sort((a, b) => (a.orderIndex - b.orderIndex) || (a.originalIndex - b.originalIndex))
       .map(x => x.league);
+  }
+
+  function countPublicUseOnce() {
+    try {
+      if (localStorage.getItem(PUBLIC_USE_COUNT_KEY) === '1') return;
+    } catch (_) {
+      return;
+    }
+
+    const counter = document.createElement('img');
+    counter.alt = '';
+    counter.setAttribute('aria-hidden', 'true');
+    counter.referrerPolicy = 'no-referrer';
+    Object.assign(counter.style, {
+      position: 'fixed',
+      width: '1px',
+      height: '1px',
+      opacity: '0',
+      pointerEvents: 'none'
+    });
+
+    counter.onload = () => {
+      try {
+        localStorage.setItem(PUBLIC_USE_COUNT_KEY, '1');
+      } catch (_) {}
+      counter.remove();
+    };
+
+    counter.onerror = () => counter.remove();
+    counter.src = PUBLIC_USE_COUNTER_URL;
+    document.body.appendChild(counter);
   }
 
   function showBanner(message) {
@@ -726,7 +759,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.22', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.23', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -928,7 +961,7 @@
     ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Fantasy Lineup Check v1.0.22`,
+      `🏈 Fantasy Lineup Check v1.0.23`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       counts,
@@ -1317,7 +1350,7 @@
       </div>`;
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.22</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.23</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       <div style="margin-top:2px;color:${COLORS.muted};font-size:13px;">Checked ${escapeHTML(checkedAt)}</div>
       ${headerStatus}
@@ -1347,6 +1380,8 @@
 
     addButtons(results, sleeperURL, shareModel);
     document.body.appendChild(results);
+
+    if (checkedCount > 0) countPublicUseOnce();
 
     const finalSelect = getTeamSelect();
     if (finalSelect && startingTeam) {
