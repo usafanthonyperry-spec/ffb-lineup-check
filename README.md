@@ -2,7 +2,7 @@
 
 An iPhone/Safari helper for The Fantasy Footballers Ultimate Dashboard. It checks every synced league for lineup changes, FLEX/SFLEX placement, Spot Starts, and already-optimized leagues.
 
-**Current release: v1.0.27 — Sep 29, 2026**
+**Current release: v1.0.28 — Sep 29, 2026**
 
 ## Install
 
@@ -42,17 +42,19 @@ Numbered slots inside the same position are treated as equivalent. A player alre
 - **📤 Share Results** creates one full-length PNG.
 - **Open Sleeper**, **Run Again**, and **Done** controls.
 - A compact sticky top summary stays visible while you scroll mixed/long reports.
+- That sticky summary checks the latest published version and shows whether the installed checker is current or has an update available.
 - **🙈 Hide Optimized / 👀 Show Optimized** stays in that top summary and remembers your last choice for future runs.
 - **✅ All leagues optimized** summary when every verified league is clean.
 - **💡 Suggest** and **🐛 Report Bug** links inside completed results.
 - Counts the first successful public checker run from each browser so public adoption can be estimated.
 
-## v1.0.27 changes
+## v1.0.28 changes
 
-- Makes the compact results summary **sticky** while you scroll through leagues.
-- Keeps the version, Needs Attention count, red/yellow/green status counts, and Hide/Show Optimized control in the sticky area.
-- Remembers whether you last chose **Hide Optimized** or **Show Optimized** and uses that preference on the next mixed report.
-- Keeps the checked-league count and timestamp outside the sticky area so the header stays compact.
+- Adds a live version check inside the sticky results header.
+- Shows **✓ v1.0.28 current** when the installed checker matches the latest published version.
+- Shows **⬆️ Update available — vX.X.X** with an **Install Update** link when a newer release exists.
+- Uses Userscripts' privileged `GM.xmlHttpRequest` API so the check is not dependent on normal page fetch/CORS behavior.
+- If the remote version check fails, the status line simply disappears and the lineup checker continues normally.
 - Core lineup comparison and Spot Starts logic are unchanged.
 
 ## Public usage counter
