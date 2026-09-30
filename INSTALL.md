@@ -197,6 +197,8 @@ Example:
 
 This means the suggested lineup uses the same players but places them in different eligible lineup slots.
 
+Numbered spots inside the same position are treated as equivalent. For example, **WR 2 → WR 1**, **RB 2 → RB 1**, or **FLEX 2 → FLEX 1** is not shown as a required change because those numbered slots are functionally the same.
+
 ## Spot Starts
 
 Example:
