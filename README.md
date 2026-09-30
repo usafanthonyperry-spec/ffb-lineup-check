@@ -1,11 +1,12 @@
 # FFB Fantasy Lineup Check — v1.0 Public Release
 
-## Current release — v1.0.21
+## Current release — v1.0.22
 
-- Adds a local checked-time stamp to the results and shared PNG.
-- Adds **📋 Copy Summary** for a paste-ready text report.
-- Adds **💡 Suggest** and **🐛 Report Bug** links directly inside completed results.
-- Keeps the v1.0.20 red/yellow/green status system and compact optimized cards unchanged.
+- Ignores meaningless numbered-slot reshuffles within the same position group.
+- Example: WR 2 → WR 1, RB 2 → RB 1, or FLEX 2 → FLEX 1 is no longer shown as a required change.
+- This remains suppressed even when another player enters or leaves that position group.
+- Real cross-position moves, lineup changes, and Spot Starts still appear normally.
+- Keeps the v1.0.21 checked-time, Copy Summary, and feedback utilities.
 
 ## Full user setup guide
 
