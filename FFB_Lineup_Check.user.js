@@ -1,14 +1,13 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.28
+// @version      1.0.29
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
 // @match        https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/*
 // @run-at       document-idle
-// @grant        GM.xmlHttpRequest
-// @inject-into  content
+// @grant        none
 // @noframes
 // ==/UserScript==
 
@@ -30,10 +29,9 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.28';
+  const APP_VERSION = '1.0.29';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
   const HIDE_OPTIMIZED_STORAGE_KEY = 'ffb-public-hide-optimized';
-  const LATEST_VERSION_URL = 'https://usafanthonyperry-spec.github.io/ffb-lineup-check/latest.txt';
   const UPDATE_INSTALL_URL = 'https://usafanthonyperry-spec.github.io/ffb-lineup-check/';
   const PUBLIC_USE_COUNT_KEY = 'ffb-public-use-counted-v1';
   const PUBLIC_USE_COUNTER_URL = 'https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-use.svg?label=public%20uses&color=54d17a';
@@ -76,53 +74,31 @@
     return 0;
   }
 
-  async function getLatestPublishedVersion() {
+  function getShortcutLatestVersion() {
     try {
-      if (!globalThis.GM?.xmlHttpRequest) return '';
-
-      const response = await globalThis.GM.xmlHttpRequest({
-        method: 'GET',
-        url: `${LATEST_VERSION_URL}?t=${Date.now()}`,
-        timeout: 3500,
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
-      });
-
-      if (response.status < 200 || response.status >= 300) return '';
-
-      const latest = String(response.responseText || '').trim();
+      const latest = new URLSearchParams(location.search).get('ffb_latest')?.trim() || '';
       return /^\d+\.\d+\.\d+$/.test(latest) ? latest : '';
-    } catch (error) {
-      console.warn('FFB update check failed:', error);
+    } catch (_) {
       return '';
     }
   }
 
-  async function refreshUpdateStatus(results) {
-    const status = results.querySelector('#ffb-update-status');
-    if (!status) return;
-
-    const latest = await getLatestPublishedVersion();
-    if (!status.isConnected) return;
-
-    if (!latest) {
-      status.remove();
-      return;
-    }
+  function renderUpdateStatus() {
+    const latest = getShortcutLatestVersion();
+    if (!latest) return '';
 
     if (compareVersions(latest, APP_VERSION) > 0) {
-      status.style.color = COLORS.yellow;
-      status.style.fontWeight = '800';
-      status.innerHTML = `
-        <span>⬆️ Update available — v${escapeHTML(latest)}</span>
-        <a href="${UPDATE_INSTALL_URL}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-left:8px;color:${COLORS.yellow};text-decoration:underline;font-weight:800;">Install Update</a>`;
-      return;
+      return `
+        <div id="ffb-update-status" style="margin-top:3px;color:${COLORS.yellow};font-size:12px;font-weight:800;">
+          <span>⬆️ Update available — v${escapeHTML(latest)}</span>
+          <a href="https://usafanthonyperry-spec.github.io/ffb-lineup-check/" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-left:8px;color:${COLORS.yellow};text-decoration:underline;font-weight:800;">Install Update</a>
+        </div>`;
     }
 
-    status.style.color = COLORS.green;
-    status.style.fontWeight = '700';
-    status.textContent = `✓ v${APP_VERSION} current`;
+    return `
+      <div id="ffb-update-status" style="margin-top:3px;color:${COLORS.green};font-size:12px;font-weight:700;">
+        ✓ v${APP_VERSION} current
+      </div>`;
   }
 
   async function getVersionNotice() {
@@ -803,7 +779,7 @@
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
     const attentionCount = lineupCount + spotCount + errorCount;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.28', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.29', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -1018,7 +994,7 @@
         ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Fantasy Lineup Check v1.0.28`,
+      `🏈 Fantasy Lineup Check v1.0.29`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       attentionCount ? `⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention` : '',
@@ -1428,8 +1404,8 @@
 
     let html = `
       <div id="ffb-sticky-summary" style="position:sticky;top:-18px;z-index:5;margin:-18px -18px 0;padding:13px 18px 11px;background:${COLORS.bg};border-bottom:1px solid ${COLORS.border};box-shadow:0 5px 12px rgba(0,0,0,.24);">
-        <div style="font-size:16px;font-weight:800;">🏈 Fantasy Lineup Check v1.0.28</div>
-        <div id="ffb-update-status" style="margin-top:3px;color:${COLORS.muted};font-size:12px;font-weight:600;">Checking for update…</div>
+        <div style="font-size:16px;font-weight:800;">🏈 Fantasy Lineup Check v1.0.29</div>
+        ${renderUpdateStatus()}
         ${attentionCount ? `<div style="margin-top:5px;color:${COLORS.yellow};font-size:14px;font-weight:800;">⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention</div>` : ''}
         ${headerStatus}
         ${optimizedToggleHTML}
@@ -1490,7 +1466,6 @@
 
     addButtons(results, sleeperURL, shareModel);
     document.body.appendChild(results);
-    void refreshUpdateStatus(results);
 
     if (checkedCount > 0) countPublicUseOnce();
 
