@@ -353,3 +353,16 @@ This is an unofficial community tool.
 It is not affiliated with, sponsored by, or endorsed by The Fantasy Footballers or Sleeper.
 
 The checker uses information already available to the signed-in user through The Fantasy Footballers Ultimate Dashboard.
+
+
+## Update notifications
+
+The lightweight launcher checks the current published release before opening the Fantasy Footballers Dashboard.
+
+When a new release is published, it briefly shows a text notice such as:
+
+**⬆️ New version available — v1.0.17**
+
+Compare that number with the version shown at the top of your lineup-checker results. If your installed version is older, return to the installer page and reinstall the checker.
+
+The launcher notice is text-only and does not require an additional Safari extension permission.
