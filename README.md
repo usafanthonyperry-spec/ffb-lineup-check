@@ -75,3 +75,13 @@ The Shortcut reads `latest.txt`, so updating that file is what makes the newest 
 The main **Fantasy Lineup Check** Shortcut reads `latest.txt` every time it runs and shows the latest published version in an iPhone notification before opening the Ultimate Dashboard.
 
 Users compare that number with the version shown in the checker header. If the installed checker is older, they reinstall from the public setup page.
+
+
+## Feedback and bug reports
+
+Public users can submit reviewed suggestions and bug reports through GitHub Issues:
+
+- Suggest an improvement: https://github.com/usafanthonyperry-spec/ffb-lineup-check/issues/new?template=feature_request.yml
+- Report a bug: https://github.com/usafanthonyperry-spec/ffb-lineup-check/issues/new?template=bug_report.yml
+
+Submitted ideas should be reviewed before implementation. Approved changes can then be tested, versioned, and released through the normal update process.
