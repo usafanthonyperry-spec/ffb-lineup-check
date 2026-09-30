@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check — Perry
 // @namespace    local.ffb.lineupcheck.perry
-// @version      1.0.18
+// @version      1.0.19
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.user.js
 // @description  Perry personal FFB lineup checker with custom league order, lineup/FLEX/SFLEX fixes, Spot Starts, and shareable results.
@@ -40,7 +40,7 @@
     'Off With Their Heads'
   ];
 
-  const APP_VERSION = '1.0.18';
+  const APP_VERSION = '1.0.19';
   const VERSION_STORAGE_KEY = 'ffb-perry-last-version';
 
   const IS_LAUNCHER = location.hostname === 'usafanthonyperry-spec.github.io'
@@ -733,7 +733,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Perry Lineup Check v1.0.18', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Perry Lineup Check v1.0.19', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
 
@@ -1157,13 +1157,16 @@
       headerStatus = `
         <div style="margin-top:6px;color:${COLORS.red};font-weight:700;">
           ${lineupCount} lineup ${lineupCount === 1 ? 'needs' : 'need'} changes
-          <span style="color:${COLORS.muted};font-weight:400;">${spotCount ? ` • ${spotCount} spot-start only` : ''}${optimizedCount ? ` • ${optimizedCount} optimized` : ''}${errorCount ? ` • ${errorCount} couldn't verify` : ''}</span>
+          ${spotCount ? `<span style="color:${COLORS.muted};font-weight:400;"> • ${spotCount} spot-start only</span>` : ''}
+          ${optimizedCount ? `<span style="color:${COLORS.green};font-weight:600;"> • ${optimizedCount} optimized</span>` : ''}
+          ${errorCount ? `<span style="color:${COLORS.muted};font-weight:400;"> • ${errorCount} couldn't verify</span>` : ''}
         </div>`;
     } else if (spotCount) {
       headerStatus = `
         <div style="margin-top:6px;color:${COLORS.yellow};font-weight:700;">
           ${spotCount} lineup ${spotCount === 1 ? 'is' : 'are'} set • Spot Starts available
-          <span style="color:${COLORS.muted};font-weight:400;">${optimizedCount ? ` • ${optimizedCount} optimized` : ''}${errorCount ? ` • ${errorCount} couldn't verify` : ''}</span>
+          ${optimizedCount ? `<span style="color:${COLORS.green};font-weight:600;"> • ${optimizedCount} optimized</span>` : ''}
+          ${errorCount ? `<span style="color:${COLORS.muted};font-weight:400;"> • ${errorCount} couldn't verify</span>` : ''}
         </div>`;
     } else if (errorCount) {
       headerStatus = `<div style="margin-top:6px;color:${COLORS.yellow};font-weight:600;">${optimizedCount} optimized • ${errorCount} couldn't verify</div>`;
@@ -1172,7 +1175,7 @@
     }
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Perry Lineup Check v1.0.18</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Perry Lineup Check v1.0.19</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       ${headerStatus}
       ${renderVersionNotice(versionNotice)}`;
