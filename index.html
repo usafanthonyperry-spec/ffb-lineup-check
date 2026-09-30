@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- deploy: v1.0.38-refresh -->
+<!-- deploy: v1.0.39-refresh -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -31,7 +31,7 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
 <main>
 <h1>🏈 FFB Fantasy Lineup Check</h1>
 <p class="lead">Check every synced Fantasy Footballers league for lineup changes, FLEX/SFLEX placement, and Spot Starts — then share the whole report as one image.</p>
-<p class="small" style="margin-top:-12px;margin-bottom:6px;"><strong>Current version: v1.0.38</strong></p>
+<p class="small" style="margin-top:-12px;margin-bottom:6px;"><strong>Current version: v1.0.39</strong></p>
 <p class="small" style="margin-top:0;margin-bottom:18px;">Released Sep 30, 2026</p>
 
 <div class="card">
@@ -41,8 +41,8 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
 </div>
 
 <div class="card notice">
-  <h2>What’s new in v1.0.38</h2>
-  <p class="small">Fixes stale lineup comparisons after <strong>Sync Team</strong>. The checker now waits for the Fantasy Footballers <strong>Current</strong> roster to refresh and settle before comparing it with Optimized, with a longer fallback wait and a timeout so one slow league cannot hang the scan.</p>
+  <h2>What’s new in v1.0.39</h2>
+  <p class="small">Fixes repeated-slot mapping for WR/RB/FLEX and other duplicated starter positions. The checker now preserves players who remain in the same position group and fills the actual vacated slot, preventing false instructions that appear to bench a player who is still in the optimized lineup.</p>
 </div>
 
 <div class="card">
@@ -63,7 +63,7 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
   <div class="step">TAP 2</div>
   <h2>Install the checker</h2>
   <p class="small">Open the script in Safari. Then open Safari's Userscripts extension and confirm Install.</p>
-  <a class="btn" href="./FFB_Lineup_Check.user.js?v=1.0.38">Install FFB Lineup Checker</a>
+  <a class="btn" href="./FFB_Lineup_Check.user.js?v=1.0.39">Install FFB Lineup Checker</a>
 </div>
 
 <div class="card">
