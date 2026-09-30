@@ -2,7 +2,7 @@
 
 An iPhone/Safari helper for The Fantasy Footballers Ultimate Dashboard. It checks every synced league for lineup changes, FLEX/SFLEX placement, Spot Starts, and already-optimized leagues.
 
-**Current release: v1.0.26 — Sep 29, 2026**
+**Current release: v1.0.27 — Sep 29, 2026**
 
 ## Install
 
@@ -41,16 +41,18 @@ Numbered slots inside the same position are treated as equivalent. A player alre
 - **📋 Copy Summary** creates a paste-ready text report.
 - **📤 Share Results** creates one full-length PNG.
 - **Open Sleeper**, **Run Again**, and **Done** controls.
-- **🙈 Hide Optimized / 👀 Show Optimized** directly under the top status summary on mixed reports.
+- A compact sticky top summary stays visible while you scroll mixed/long reports.
+- **🙈 Hide Optimized / 👀 Show Optimized** stays in that top summary and remembers your last choice for future runs.
 - **✅ All leagues optimized** summary when every verified league is clean.
 - **💡 Suggest** and **🐛 Report Bug** links inside completed results.
 - Counts the first successful public checker run from each browser so public adoption can be estimated.
 
-## v1.0.26 changes
+## v1.0.27 changes
 
-- Adds a top **⚠️ X leagues need attention** count so red, yellow, and verification-problem leagues are summarized in one number.
-- Carries that same Needs Attention count into **Copy Summary** and **Share Results**.
-- Keeps the v1.0.25 Hide Optimized placement and behavior unchanged.
+- Makes the compact results summary **sticky** while you scroll through leagues.
+- Keeps the version, Needs Attention count, red/yellow/green status counts, and Hide/Show Optimized control in the sticky area.
+- Remembers whether you last chose **Hide Optimized** or **Show Optimized** and uses that preference on the next mixed report.
+- Keeps the checked-league count and timestamp outside the sticky area so the header stays compact.
 - Core lineup comparison and Spot Starts logic are unchanged.
 
 ## Public usage counter
