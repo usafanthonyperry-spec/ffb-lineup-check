@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.31
+// @version      1.0.32
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -29,7 +29,7 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.31';
+  const APP_VERSION = '1.0.32';
   const HIDE_OPTIMIZED_STORAGE_KEY = 'ffb-public-hide-optimized';
   const UPDATE_INSTALL_URL = 'https://usafanthonyperry-spec.github.io/ffb-lineup-check/';
   const PUBLIC_USE_COUNT_KEY = 'ffb-public-use-counted-v1';
@@ -744,7 +744,7 @@
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
     const attentionCount = lineupCount + spotCount + errorCount;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.31', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.32', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -959,7 +959,7 @@
         ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Fantasy Lineup Check v1.0.31`,
+      `🏈 Fantasy Lineup Check v1.0.32`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       attentionCount ? `⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention` : '',
@@ -1368,7 +1368,7 @@
 
     let html = `
       <div id="ffb-sticky-summary" style="position:sticky;top:-18px;z-index:5;margin:-18px -18px 0;padding:13px 18px 11px;background:${COLORS.bg};border-bottom:1px solid ${COLORS.border};box-shadow:0 5px 12px rgba(0,0,0,.24);">
-        <div style="font-size:16px;font-weight:800;">🏈 Fantasy Lineup Check v1.0.31</div>
+        <div style="font-size:16px;font-weight:800;">🏈 Fantasy Lineup Check</div>
         ${renderUpdateStatus()}
         ${attentionCount ? `<div style="margin-top:5px;color:${COLORS.yellow};font-size:14px;font-weight:800;">⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention</div>` : ''}
         ${headerStatus}
