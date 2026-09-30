@@ -162,6 +162,14 @@ For each league it:
 
 Every successfully checked league receives a card.
 
+The card color tells you what still needs attention:
+
+- **Red** — lineup changes are still needed.
+- **Yellow** — the lineup itself matches the optimizer, but one or more Spot Starts are available.
+- **Green** — the lineup matches the optimizer and there are no Spot Starts changes to consider.
+
+The same colors are used in the shareable results image.
+
 ## Optimized league
 
 An optimized league looks like:
