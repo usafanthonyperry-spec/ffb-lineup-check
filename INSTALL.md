@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.24 — Sep 29, 2026**
+**Current release: v1.0.25 — Sep 29, 2026**
 
 Public installer:
 
@@ -123,7 +123,7 @@ Spot Starts show a higher-projected available option. They do not decide which u
 
 **🔄 Run Again** — reloads the Dashboard and performs a fresh scan.
 
-**🙈 Hide Optimized / 👀 Show Optimized** — appears on mixed reports that contain at least one green optimized league and at least one non-green league. It only changes what is visible on screen; it does not change the scan, recommendations, copied summary, or shared image.
+**🙈 Hide Optimized / 👀 Show Optimized** — appears near the top of mixed reports, directly under the status summary, when there is at least one green optimized league and at least one non-green league. The button includes the optimized count, such as **🙈 Hide 12 Optimized**. It only changes what is visible on screen; it does not change the scan, recommendations, copied summary, or shared image.
 
 **📋 Copy Summary** — copies a text version of the report, including the checked time.
 
