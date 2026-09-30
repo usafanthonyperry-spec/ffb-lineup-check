@@ -1,10 +1,11 @@
 # FFB Fantasy Lineup Check — v1.0 Public Release
 
-## Current release — v1.0.20
+## Current release — v1.0.21
 
-- Red, yellow, and green summary counts now match each league's status.
-- Fully optimized green leagues use compact cards so action items are easier to scan.
-- Shared result images use the same colored summary and compact optimized layout.
+- Adds a local checked-time stamp to the results and shared PNG.
+- Adds **📋 Copy Summary** for a paste-ready text report.
+- Adds **💡 Suggest** and **🐛 Report Bug** links directly inside completed results.
+- Keeps the v1.0.20 red/yellow/green status system and compact optimized cards unchanged.
 
 ## Full user setup guide
 
