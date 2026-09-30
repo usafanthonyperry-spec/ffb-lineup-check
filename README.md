@@ -1,95 +1,80 @@
-# FFB Fantasy Lineup Check — v1.0 Public Release
+# FFB Fantasy Lineup Check
 
-## Current release — v1.0.22
+An iPhone/Safari helper for The Fantasy Footballers Ultimate Dashboard. It checks every synced league for lineup changes, FLEX/SFLEX placement, Spot Starts, and already-optimized leagues.
 
-- Ignores meaningless numbered-slot reshuffles within the same position group.
-- Example: WR 2 → WR 1, RB 2 → RB 1, or FLEX 2 → FLEX 1 is no longer shown as a required change.
-- This remains suppressed even when another player enters or leaves that position group.
-- Real cross-position moves, lineup changes, and Spot Starts still appear normally.
-- Keeps the v1.0.21 checked-time, Copy Summary, and feedback utilities.
+**Current release: v1.0.22 — Sep 29, 2026**
 
-## Full user setup guide
+## Install
 
-[Open the complete step-by-step installation and usage guide](./INSTALL.md)
+Use the public installer:
 
-## Public install links
+https://usafanthonyperry-spec.github.io/ffb-lineup-check/
 
-- Public installer: https://usafanthonyperry-spec.github.io/ffb-lineup-check/
-- Fantasy Lineup Check shortcut: https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29
-- Rankings Alert shortcut: https://www.icloud.com/shortcuts/dd78ca052ecd4d98979dd2f810dced70
+The normal setup is:
 
-The main lineup Shortcut does not contain the checker JavaScript. It checks `latest.txt`, shows the latest available version in a notification, then opens the Fantasy Footballers Ultimate Dashboard. Userscripts runs the checker automatically.
+1. Install and enable **Userscripts** for Safari.
+2. Install **FFB Fantasy Lineup Check** from the public installer.
+3. Add the shared **Fantasy Lineup Check** Shortcut.
+4. Sign into The Fantasy Footballers in Safari and make sure your leagues are synced in Ultimate Dashboard.
+5. Run the Shortcut.
 
-## Creator-only shortcut
+For screenshots, troubleshooting, and first-run details, see [INSTALL.md](./INSTALL.md).
 
-- Write FFB Test Script: https://www.icloud.com/shortcuts/ab546ef8217c4af0b3c37d2f57218ecc
+## What the results mean
 
-Do **not** put the Write FFB Test Script shortcut on the public 3-tap page. It is for development/testing.
+- **Red** — lineup changes are still needed.
+- **Yellow** — the lineup is set, but Spot Starts are available.
+- **Green** — the lineup is set and there are no Spot Starts to consider.
+- **Couldn't Verify** — the checker could not reliably read that league.
 
-## Planned GitHub repository
+Fully optimized green leagues use compact cards so action items stand out.
 
-Owner: `usafanthonyperry-spec`
-Repository: `ffb-lineup-check`
+Numbered slots inside the same position are treated as equivalent. A player already in **WR 2** does not need to move to **WR 1**, for example. Real position changes such as **WR → FLEX** can still be shown when they matter.
 
-Expected GitHub Pages site:
+## Current features
 
-`https://usafanthonyperry-spec.github.io/ffb-lineup-check/`
+- Checks every synced Ultimate Dashboard league.
+- Detects lineup changes and useful FLEX/SFLEX placement changes.
+- Reads Spot Starts and hides projected gains that round to +0.0.
+- Shows red/yellow/green status counts.
+- Shows the time the scan finished.
+- **📋 Copy Summary** creates a paste-ready text report.
+- **📤 Share Results** creates one full-length PNG.
+- **Open Sleeper**, **Run Again**, and **Done** controls.
+- **💡 Suggest** and **🐛 Report Bug** links inside completed results.
 
-Expected userscript URL:
+## Shared Shortcuts
 
-`https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js`
+- Fantasy Lineup Check: https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29
+- Check FFB Rankings: https://www.icloud.com/shortcuts/dd78ca052ecd4d98979dd2f810dced70
 
-The public userscript is already configured with those update/download URLs.
+The main Shortcut checks `latest.txt`, shows the latest available checker version, then opens the Ultimate Dashboard. The userscript does the actual lineup scan.
 
-## Files to publish at repository root
+## Updates
 
-- `index.html`
-- `FFB_Lineup_Check.user.js`
-- `FFB_Lineup_Check.meta.js`
-- `README.md`
+When the Shortcut shows a newer version than the version in the checker header, open the public installer and reinstall the checker.
 
-## GitHub Pages
+The public installer URL does not change between releases.
 
-Create a PUBLIC repository named `ffb-lineup-check`, put these files on the default branch, then enable GitHub Pages for the repository root/default branch.
-
-## User setup flow
-
-1. Install Userscripts.
-2. Install `FFB_Lineup_Check.user.js`.
-3. Add the **Fantasy Lineup Check** shared Shortcut: https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29
-
-The Shortcut:
-- Reads `https://usafanthonyperry-spec.github.io/ffb-lineup-check/latest.txt`
-- Shows the latest available FFB version in a notification
-- Opens `https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/`
-
-The Shortcut contains no checker JavaScript. Apple still requires the one-time Safari extension permission. That cannot be silently granted.
-
-## Updating later
-
-For every release:
-
-1. Increment `@version` in BOTH:
-   - `FFB_Lineup_Check.user.js`
-   - `FFB_Lineup_Check.meta.js`
-2. Update `latest.txt` to the same version number.
-3. Update the visible version number on the installer page.
-4. Publish the files to the same URLs.
-
-The Shortcut reads `latest.txt`, so updating that file is what makes the newest release number appear in users' notifications.
-
-## Update notifications
-
-The main **Fantasy Lineup Check** Shortcut reads `latest.txt` every time it runs and shows the latest published version in an iPhone notification before opening the Ultimate Dashboard.
-
-Users compare that number with the version shown in the checker header. If the installed checker is older, they reinstall from the public setup page.
-
-
-## Feedback and bug reports
-
-Public users can submit reviewed suggestions and bug reports through GitHub Issues:
+## Feedback
 
 - Suggest an improvement: https://github.com/usafanthonyperry-spec/ffb-lineup-check/issues/new?template=feature_request.yml
 - Report a bug: https://github.com/usafanthonyperry-spec/ffb-lineup-check/issues/new?template=bug_report.yml
 
-Submitted ideas should be reviewed before implementation. Approved changes can then be tested, versioned, and released through the normal update process.
+Suggestions and bug reports are reviewed before changes are released.
+
+## Maintainer release checklist
+
+For each new release:
+
+1. Update `@version` in the public and Perry userscripts and metadata files.
+2. Update `version.json`, `personal/version.json`, and `latest.txt`.
+3. Update the visible version/date and **What's New** text on the installer pages.
+4. Update these release notes if behavior changed.
+5. Let GitHub Pages finish deploying before sharing fresh installer links.
+
+Creator-only test Shortcut:
+
+https://www.icloud.com/shortcuts/ab546ef8217c4af0b3c37d2f57218ecc
+
+This test Shortcut is not required by public users.
