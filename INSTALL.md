@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.25 — Sep 29, 2026**
+**Current release: v1.0.26 — Sep 29, 2026**
 
 Public installer:
 
@@ -94,6 +94,8 @@ Green leagues are compact so the leagues that need attention stand out.
 
 If there are no lineup changes, no Spot Starts, and no verification errors, the summary shows **✅ All leagues optimized**.
 
+If anything does need attention, the top of the report also shows a single **⚠️ X leagues need attention** count. This includes red lineup-change leagues, yellow Spot Starts leagues, and leagues that couldn't be verified.
+
 ### Numbered lineup spots
 
 Numbered spots inside the same position are interchangeable.
@@ -125,9 +127,9 @@ Spot Starts show a higher-projected available option. They do not decide which u
 
 **🙈 Hide Optimized / 👀 Show Optimized** — appears near the top of mixed reports, directly under the status summary, when there is at least one green optimized league and at least one non-green league. The button includes the optimized count, such as **🙈 Hide 12 Optimized**. It only changes what is visible on screen; it does not change the scan, recommendations, copied summary, or shared image.
 
-**📋 Copy Summary** — copies a text version of the report, including the checked time.
+**📋 Copy Summary** — copies a text version of the report, including the checked time and Needs Attention count when applicable.
 
-**📤 Share Results** — creates one full-length PNG of the report.
+**📤 Share Results** — creates one full-length PNG of the report, including the Needs Attention count when applicable.
 
 **💡 Suggest / 🐛 Report Bug** — opens the GitHub feedback forms.
 
