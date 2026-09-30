@@ -42,7 +42,7 @@ footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.5}
 
 <div class="card notice">
   <h2>What’s new in v1.0.38</h2>
-  <p class="small">Adds a near-full-screen championship photo slideshow during league checks. The <strong>Checking X of Y</strong> status remains visible, and the slideshow disappears as soon as results are ready. Checker logic is otherwise unchanged.</p>
+  <p class="small">Fixes stale lineup comparisons after <strong>Sync Team</strong>. The checker now waits for the Fantasy Footballers <strong>Current</strong> roster to refresh and settle before comparing it with Optimized, with a longer fallback wait and a timeout so one slow league cannot hang the scan.</p>
 </div>
 
 <div class="card">
