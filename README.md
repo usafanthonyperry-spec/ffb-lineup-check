@@ -2,7 +2,7 @@
 
 An iPhone/Safari helper for The Fantasy Footballers Ultimate Dashboard. It checks every synced league for lineup changes, FLEX/SFLEX placement, Spot Starts, and already-optimized leagues.
 
-**Current release: v1.0.28 — Sep 29, 2026**
+**Current release: v1.0.29 — Sep 30, 2026**
 
 ## Install
 
@@ -42,19 +42,18 @@ Numbered slots inside the same position are treated as equivalent. A player alre
 - **📤 Share Results** creates one full-length PNG.
 - **Open Sleeper**, **Run Again**, and **Done** controls.
 - A compact sticky top summary stays visible while you scroll mixed/long reports.
-- That sticky summary checks the latest published version and shows whether the installed checker is current or has an update available.
+- That sticky summary can show whether the installed checker is current or has an update available when the Shortcut passes the latest version into the Dashboard URL.
 - **🙈 Hide Optimized / 👀 Show Optimized** stays in that top summary and remembers your last choice for future runs.
 - **✅ All leagues optimized** summary when every verified league is clean.
 - **💡 Suggest** and **🐛 Report Bug** links inside completed results.
 - Counts the first successful public checker run from each browser so public adoption can be estimated.
 
-## v1.0.28 changes
+## v1.0.29 changes
 
-- Adds a live version check inside the sticky results header.
-- Shows **✓ v1.0.28 current** when the installed checker matches the latest published version.
-- Shows **⬆️ Update available — vX.X.X** with an **Install Update** link when a newer release exists.
-- Uses Userscripts' privileged `GM.xmlHttpRequest` API so the check is not dependent on normal page fetch/CORS behavior.
-- If the remote version check fails, the status line simply disappears and the lineup checker continues normally.
+- Replaces the failed direct web request from v1.0.28 with a Shortcut-to-checker version handoff.
+- The Shortcut still reads `latest.txt`, then opens Ultimate Dashboard with the latest version attached as `ffb_latest`.
+- The sticky header reads that value locally and shows **✓ v1.0.29 current** or **⬆️ Update available — vX.X.X** with an **Install Update** link.
+- If the Shortcut does not pass `ffb_latest`, the update line stays hidden and the lineup checker works normally.
 - Core lineup comparison and Spot Starts logic are unchanged.
 
 ## Public usage counter
@@ -72,7 +71,7 @@ https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-
 - Fantasy Lineup Check: https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29
 - Check FFB Rankings: https://www.icloud.com/shortcuts/dd78ca052ecd4d98979dd2f810dced70
 
-The main Shortcut checks `latest.txt`, shows the latest available checker version, then opens the Ultimate Dashboard. The userscript does the actual lineup scan.
+The main Shortcut checks `latest.txt`, shows the latest available checker version, then opens the Ultimate Dashboard. For the in-checker update status, the Dashboard URL should include `?ffb_latest=[Contents of URL]`, using the same version value returned by `latest.txt`. The userscript does the actual lineup scan.
 
 ## Updates
 
