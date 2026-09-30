@@ -7,14 +7,14 @@
 ## Public install links
 
 - Public installer: https://usafanthonyperry-spec.github.io/ffb-lineup-check/
-- Lightweight Lineup Checker shortcut: https://www.icloud.com/shortcuts/bb0562b4d9c64aa1b50921dc7ed48b32
-- Rankings Alert shortcut: https://www.icloud.com/shortcuts/8ea889e931c843f382dc3dc63a59c70e
+- Fantasy Lineup Check shortcut: https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29
+- Rankings Alert shortcut: https://www.icloud.com/shortcuts/dd78ca052ecd4d98979dd2f810dced70
 
-The main lineup launcher is intentionally a simple two-action Apple Shortcut: **URL → Open URLs**. It contains no checker JavaScript.
+The main lineup Shortcut does not contain the checker JavaScript. It checks `latest.txt`, shows the latest available version in a notification, then opens the Fantasy Footballers Ultimate Dashboard. Userscripts runs the checker automatically.
 
 ## Creator-only shortcut
 
-- Write FFB Test Script: https://www.icloud.com/shortcuts/8e97c997f26a4ffcaf60ab44d51b8c3e
+- Write FFB Test Script: https://www.icloud.com/shortcuts/ab546ef8217c4af0b3c37d2f57218ecc
 
 Do **not** put the Write FFB Test Script shortcut on the public 3-tap page. It is for development/testing.
 
@@ -48,23 +48,30 @@ Create a PUBLIC repository named `ffb-lineup-check`, put these files on the defa
 
 1. Install Userscripts.
 2. Install `FFB_Lineup_Check.user.js`.
-3. Add the lightweight **Fantasy Lineup Check** shared Shortcut: https://www.icloud.com/shortcuts/bb0562b4d9c64aa1b50921dc7ed48b32
+3. Add the **Fantasy Lineup Check** shared Shortcut: https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29
 
-The launcher contains only:
-- **URL** → `https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/`
-- **Open URLs**
+The Shortcut:
+- Reads `https://usafanthonyperry-spec.github.io/ffb-lineup-check/latest.txt`
+- Shows the latest available FFB version in a notification
+- Opens `https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/`
 
-The launcher should contain no JavaScript. Apple still requires the one-time Safari extension permission. That cannot be silently granted.
+The Shortcut contains no checker JavaScript. Apple still requires the one-time Safari extension permission. That cannot be silently granted.
 
 ## Updating later
 
-Increment `@version` in BOTH:
+For every release:
 
-- `FFB_Lineup_Check.user.js`
-- `FFB_Lineup_Check.meta.js`
+1. Increment `@version` in BOTH:
+   - `FFB_Lineup_Check.user.js`
+   - `FFB_Lineup_Check.meta.js`
+2. Update `latest.txt` to the same version number.
+3. Update the visible version number on the installer page.
+4. Publish the files to the same URLs.
 
-Then publish both files to the same URLs.
+The Shortcut reads `latest.txt`, so updating that file is what makes the newest release number appear in users' notifications.
 
 ## Update notifications
 
-The launcher page always displays the latest published release number briefly before redirecting to the Ultimate Dashboard. Users can compare that number with the version in their checker header and reinstall from the public installer when their installed version is lower.
+The main **Fantasy Lineup Check** Shortcut reads `latest.txt` every time it runs and shows the latest published version in an iPhone notification before opening the Ultimate Dashboard.
+
+Users compare that number with the version shown in the checker header. If the installed checker is older, they reinstall from the public setup page.
