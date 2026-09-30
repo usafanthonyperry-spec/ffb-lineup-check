@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.29 — Sep 30, 2026**
+**Current release: v1.0.30 — Sep 30, 2026**
 
 Public installer:
 
