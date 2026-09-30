@@ -2,7 +2,7 @@
 
 An iPhone/Safari helper for The Fantasy Footballers Ultimate Dashboard. It checks every synced league for lineup changes, FLEX/SFLEX placement, Spot Starts, and already-optimized leagues.
 
-**Current release: v1.0.24 — Sep 29, 2026**
+**Current release: v1.0.25 — Sep 29, 2026**
 
 ## Install
 
@@ -41,18 +41,17 @@ Numbered slots inside the same position are treated as equivalent. A player alre
 - **📋 Copy Summary** creates a paste-ready text report.
 - **📤 Share Results** creates one full-length PNG.
 - **Open Sleeper**, **Run Again**, and **Done** controls.
-- **🙈 Hide Optimized / 👀 Show Optimized** on mixed reports.
+- **🙈 Hide Optimized / 👀 Show Optimized** directly under the top status summary on mixed reports.
 - **✅ All leagues optimized** summary when every verified league is clean.
 - **💡 Suggest** and **🐛 Report Bug** links inside completed results.
 - Counts the first successful public checker run from each browser so public adoption can be estimated.
 
-## v1.0.24 changes
+## v1.0.25 changes
 
-- Adds a display-only **Hide Optimized** toggle for mixed reports.
-- Adds a clear **✅ All leagues optimized** state when there are no lineup changes, Spot Starts, or verification errors.
-- The same All Clear wording is used in copied summaries and shared result images.
-- Removes obsolete launcher code and metadata from the public userscript.
-- Core lineup comparison and Spot Starts logic are unchanged.
+- Moves **Hide Optimized** from the bottom controls to directly under the top status summary.
+- The button now includes the optimized count, for example **🙈 Hide 12 Optimized** and **👀 Show 12 Optimized**.
+- It still appears only on mixed reports, and remains display-only.
+- Core lineup comparison, Spot Starts, copied summaries, and shared images are unchanged.
 
 ## Public usage counter
 
