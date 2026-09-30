@@ -2,7 +2,7 @@
 
 An iPhone/Safari helper for The Fantasy Footballers Ultimate Dashboard. It checks every synced league for lineup changes, FLEX/SFLEX placement, Spot Starts, and already-optimized leagues.
 
-**Current release: v1.0.32 — Sep 30, 2026**
+**Current release: v1.0.33 — Sep 30, 2026**
 
 ## Install
 
@@ -48,6 +48,13 @@ Numbered slots inside the same position are treated as equivalent. A player alre
 - **💡 Suggest** and **🐛 Report Bug** links inside completed results.
 - Counts the first successful public checker run from each browser so public adoption can be estimated.
 
+## v1.0.33 changes
+
+- Updates the public setup and update instructions to match the current Shortcut flow.
+- Removes outdated references to a version notification and manual version comparison.
+- The Shortcut now simply checks `latest.txt`, passes the result as `ffb_latest`, and lets the sticky header show **✓ current** or **⬆️ Update available**.
+- No checker behavior, lineup logic, Spot Starts logic, sticky behavior, or Hide Optimized behavior changed.
+
 ## v1.0.32 changes
 
 - Simplifies the sticky title to **🏈 Fantasy Lineup Check**; the current version remains directly underneath in the **✓ current / ⬆️ Update available** status line.
@@ -89,11 +96,15 @@ https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-
 - Fantasy Lineup Check: https://www.icloud.com/shortcuts/5bc97e0ba2c0430788bae3c006ec9632
 - Check FFB Rankings: https://www.icloud.com/shortcuts/c3d40660dff545209949c77315b08b91
 
-The main Shortcut checks `latest.txt`, shows the latest available checker version, then opens the Ultimate Dashboard. For the in-checker update status, the Dashboard URL should include `?ffb_latest=[Contents of URL]`, using the same version value returned by `latest.txt`. The userscript does the actual lineup scan.
+The main Shortcut checks `latest.txt`, passes that version into the Ultimate Dashboard URL as `ffb_latest`, and opens the Dashboard. The userscript reads that value locally to show update status in the sticky header. The Shortcut does not need to show a version notification.
 
 ## Updates
 
-When the Shortcut shows a newer version than the version in the checker header, open the public installer and reinstall the checker.
+Each time the Fantasy Lineup Check Shortcut runs, it checks the latest published version and passes that value to the checker automatically.
+
+- If the installed checker is current, the sticky header shows **✓ vX.X.X current**.
+- If a newer version is available, the sticky header shows **⬆️ Update available — vX.X.X** with an **Install Update** link.
+- Tap **Install Update** to open the newest version of the public userscript in Safari.
 
 The public installer URL does not change between releases.
 
