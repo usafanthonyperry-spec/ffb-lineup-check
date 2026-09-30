@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.31 — Sep 30, 2026**
+**Current release: v1.0.32 — Sep 30, 2026**
 
 Public installer:
 
@@ -50,7 +50,7 @@ On the public installer, tap:
 
 Shared Shortcut:
 
-https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29
+https://www.icloud.com/shortcuts/5bc97e0ba2c0430788bae3c006ec9632
 
 The Shortcut:
 
@@ -150,7 +150,7 @@ Spot Starts show a higher-projected available option. They do not decide which u
 
 The public installer also includes the optional **Check FFB Rankings** Shortcut:
 
-https://www.icloud.com/shortcuts/dd78ca052ecd4d98979dd2f810dced70
+https://www.icloud.com/shortcuts/c3d40660dff545209949c77315b08b91
 
 It is separate from the lineup checker. It can be used to check whether the week's Fantasy Footballers rankings appear to be live.
 
