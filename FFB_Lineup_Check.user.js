@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.25
+// @version      1.0.26
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -24,7 +24,7 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.25';
+  const APP_VERSION = '1.0.26';
   const VERSION_STORAGE_KEY = 'ffb-public-last-version';
   const PUBLIC_USE_COUNT_KEY = 'ffb-public-use-counted-v1';
   const PUBLIC_USE_COUNTER_URL = 'https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-use.svg?label=public%20uses&color=54d17a';
@@ -744,7 +744,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.25', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.26', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -955,7 +955,7 @@
         ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Fantasy Lineup Check v1.0.25`,
+      `🏈 Fantasy Lineup Check v1.0.26`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       counts,
@@ -1318,6 +1318,7 @@
     const spotCount = sortedLeagueResults.filter(x => x.status === 'spot').length;
     const optimizedCount = sortedLeagueResults.filter(x => x.status === 'optimized').length;
     const errorCount = sortedLeagueResults.filter(x => x.status === 'error').length;
+    const attentionCount = lineupCount + spotCount + errorCount;
     const checkedAt = formatCheckedAt();
 
     removeBanner();
@@ -1357,9 +1358,10 @@
       : '';
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.25</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Fantasy Lineup Check v1.0.26</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       <div style="margin-top:2px;color:${COLORS.muted};font-size:13px;">Checked ${escapeHTML(checkedAt)}</div>
+      ${attentionCount ? `<div style="margin-top:7px;color:${COLORS.yellow};font-weight:800;">⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention</div>` : ''}
       ${headerStatus}
       ${optimizedToggleHTML}
       ${renderVersionNotice(versionNotice)}`;
