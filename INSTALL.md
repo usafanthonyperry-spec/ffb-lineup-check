@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.28 — Sep 29, 2026**
+**Current release: v1.0.29 — Sep 30, 2026**
 
 Public installer:
 
@@ -57,7 +57,14 @@ The Shortcut:
 1. Checks the latest published checker version.
 2. Shows that version in a notification.
 3. Opens the Fantasy Footballers Ultimate Dashboard.
-4. Lets Userscripts run the checker automatically.
+4. Passes that same version into the Dashboard URL as `ffb_latest` so the checker can show update status on screen.
+5. Lets Userscripts run the checker automatically.
+
+For existing Shortcut installs, the Dashboard URL action needs one one-time edit:
+
+`https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/?ffb_latest=[Contents of URL]`
+
+The bracketed part is the **Contents of URL** magic variable from the earlier `latest.txt` request, not typed text.
 
 # 4. Prepare Fantasy Footballers
 
@@ -98,7 +105,7 @@ If anything does need attention, the top of the report also shows a single **⚠
 
 Starting in v1.0.27, the compact version/status/Hide Optimized area stays visible while you scroll. The checked-league count and timestamp stay below it so the sticky area remains small.
 
-Starting in v1.0.28, that sticky area also checks the latest published checker version. When current, it shows **✓ vX.X.X current**. If a newer version exists, it shows **⬆️ Update available — vX.X.X** with an **Install Update** link. The version check runs after results appear and does not delay the lineup scan.
+Starting in v1.0.29, the Shortcut passes the latest published version into the Dashboard URL. The sticky area reads that value locally. When current, it shows **✓ vX.X.X current**. If a newer version exists, it shows **⬆️ Update available — vX.X.X** with an **Install Update** link. No cross-site version request is made from the Fantasy Footballers page.
 
 ### Numbered lineup spots
 
@@ -174,7 +181,7 @@ The week's optimizer data may still be processing. Try again after rankings are 
 Run the checker again. If the same league keeps failing, confirm that league loads correctly in Ultimate Dashboard.
 
 **Update status does not appear:**  
-The remote version check could not complete. The lineup checker still works normally. Keep the main Shortcut version notification as the fallback, and confirm Userscripts has permission to run on the Dashboard.
+The checker did not receive the `ffb_latest` value from the Shortcut. The lineup checker still works normally. Confirm the Dashboard URL action ends with `?ffb_latest=` followed by the **Contents of URL** magic variable from the `latest.txt` request.
 
 **Duplicate scans/results:**  
 Disable older FFB userscripts and leave only one checker enabled.
@@ -190,7 +197,7 @@ It does not require you to place your Fantasy Footballers password, Sleeper pass
 
 Starting with v1.0.23, the **public build only** records one anonymous usage count after a browser completes its first successful lineup scan. A local browser flag prevents later runs from counting again. The counter does not send league names, players, Sleeper IDs, passwords, or lineup data. The Perry/private build is excluded.
 
-Starting with v1.0.28, both builds request the public `latest.txt` version file after a successful scan so the sticky header can show whether an update is available. No league, player, lineup, or account data is included in that version request.
+Starting with v1.0.29, the checker no longer makes its own remote version request. The Shortcut reads public `latest.txt` first, then passes only that version number into the Dashboard URL as `ffb_latest`. No league, player, lineup, or account data is included.
 
 Public counter statistics:
 
