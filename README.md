@@ -67,4 +67,4 @@ Then publish both files to the same URLs.
 
 ## Update notifications
 
-The launcher page announces a newly published release with a brief text notice before redirecting to the Ultimate Dashboard. Users can compare that release number with the version displayed in their checker header and reinstall from the public installer when needed.
+The launcher page always displays the latest published release number briefly before redirecting to the Ultimate Dashboard. Users can compare that number with the version in their checker header and reinstall from the public installer when their installed version is lower.
