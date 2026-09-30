@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check — Perry
 // @namespace    local.ffb.lineupcheck.perry
-// @version      1.0.21
+// @version      1.0.22
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/personal/FFB_Lineup_Check_Perry.user.js
 // @description  Perry personal FFB lineup checker with custom league order, lineup/FLEX/SFLEX fixes, Spot Starts, and shareable results.
@@ -44,7 +44,7 @@
     'Free'
   ];
 
-  const APP_VERSION = '1.0.21';
+  const APP_VERSION = '1.0.22';
   const VERSION_STORAGE_KEY = 'ffb-perry-last-version';
 
   const IS_LAUNCHER = location.hostname === 'usafanthonyperry-spec.github.io'
@@ -367,13 +367,21 @@
     };
 
     // Build instructions from the optimized slot, but ignore meaningless
-    // re-ordering inside identical slot types. WR 1 <-> WR 2, RB 1 <-> RB 2,
-    // FLEX 1 <-> FLEX 2, etc. do not change the actual starting lineup.
+    // re-ordering inside identical slot types. Slot numbers are display-only:
+    // WR 1 <-> WR 2, RB 1 <-> RB 2, FLEX 1 <-> FLEX 2, etc. never require
+    // an action by themselves, even when another player enters/leaves that group.
     let slotChanges = suggested
       .map(target => {
         const key = target.slotKey || target.slot;
         const previous = currentBySlot.get(key) || null;
+        const currentPlayerSlot = currentMap.get(target.player) || null;
+
         if (previous?.player === target.player) return null;
+
+        // If this player is already in the same slot TYPE, its numbered slot
+        // does not matter. Example: current WR 2 -> optimized WR 1 = no change.
+        if (currentPlayerSlot?.slot === target.slot) return null;
+
         if (samePlayersInSlotGroup(target.slot)) return null;
 
         return {
@@ -737,7 +745,7 @@
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
 
-    drawWrapped('🏈 Perry Lineup Check v1.0.21', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Perry Lineup Check v1.0.22', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -939,7 +947,7 @@
     ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Perry Lineup Check v1.0.21`,
+      `🏈 Perry Lineup Check v1.0.22`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       counts,
@@ -1328,7 +1336,7 @@
       </div>`;
 
     let html = `
-      <div style="font-size:18px;font-weight:700;">🏈 Perry Lineup Check v1.0.21</div>
+      <div style="font-size:18px;font-weight:700;">🏈 Perry Lineup Check v1.0.22</div>
       <div style="margin-top:6px;color:${COLORS.muted};">${checkedCount} of ${teamCount} leagues checked</div>
       <div style="margin-top:2px;color:${COLORS.muted};font-size:13px;">Checked ${escapeHTML(checkedAt)}</div>
       ${headerStatus}
