@@ -83,23 +83,26 @@ Do not install multiple copies of the checker. Two active copies can cause dupli
 
 ---
 
-# Step 4 — Add the lightweight launcher Shortcut
+# Step 4 — Add the Fantasy Lineup Check Shortcut
 
 Return to the public setup page and tap **Add Fantasy Lineup Check Shortcut**.
 
 Apple will open the shared Shortcut. Tap **Add Shortcut**.
 
-This launcher intentionally contains only two actions:
+Shared Shortcut:
 
-1. **URL**  
+https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29
+
+The Shortcut does four things:
+
+1. Checks the current published version from:
+   `https://usafanthonyperry-spec.github.io/ffb-lineup-check/latest.txt`
+2. Shows a notification with the **latest available FFB version**.
+3. Opens:
    `https://www.thefantasyfootballers.com/footclan/ultimate-dashboard/`
-2. **Open URLs**
+4. Userscripts automatically runs the installed checker on the Dashboard.
 
-That is the entire launcher. It contains **no checker JavaScript**.
-
-When you run it, Safari opens the Fantasy Footballers Ultimate Dashboard and the installed Userscripts checker runs automatically.
-
-If the shared Shortcut link ever fails, you can recreate it manually in Apple Shortcuts using those same two actions.
+The version notification is informational. Compare it with the version shown at the top of the checker results. If the Shortcut says a newer version is available than the one installed on your phone, return to the public setup page and reinstall the checker.
 
 # Step 5 — Prepare your Fantasy Footballers account
 
@@ -234,11 +237,11 @@ The public setup page also contains:
 
 **Add Rankings Alert Shortcut**
 
-This installs:
+Shared Shortcut:
 
-**🏈 Check FFB Rankings**
+https://www.icloud.com/shortcuts/dd78ca052ecd4d98979dd2f810dced70
 
-It is intended to check the Fantasy Footballers rankings page on Tuesday and notify you when the week's rankings appear to be available.
+This installs the **Check FFB Rankings** shortcut. It is intended to check whether the week's Fantasy Footballers rankings appear to be live and remind you to run the lineup checker.
 
 After installing it, verify its automation settings on your iPhone and allow it to run while locked if you want the notification without opening Shortcuts manually.
 
@@ -357,4 +360,20 @@ The checker uses information already available to the signed-in user through The
 
 ## Update notifications
 
-The lightweight launcher always shows the latest published checker version for a few seconds before opening the Fantasy Footballers Dashboard. Compare that version with the version shown at the top of your checker results. If your installed version is lower, return to the installer page and reinstall the checker. The launcher notice is text-only and does not require an additional Safari extension permission.
+The **Fantasy Lineup Check** Shortcut checks `latest.txt` each time it runs and shows the latest published checker version in an iPhone notification.
+
+Compare that number with the version shown at the top of your lineup-checker results. If your installed version is lower, return to the public installer and reinstall the checker.
+
+Current main Shortcut:
+
+https://www.icloud.com/shortcuts/f0960e18c6384788899421a848e70e29
+
+Current rankings Shortcut:
+
+https://www.icloud.com/shortcuts/dd78ca052ecd4d98979dd2f810dced70
+
+## Developer / testing shortcut
+
+The **Write FFB Test Script** shortcut is only for development/testing and is not required for normal use.
+
+https://www.icloud.com/shortcuts/ab546ef8217c4af0b3c37d2f57218ecc
