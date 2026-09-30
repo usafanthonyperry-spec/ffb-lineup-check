@@ -743,12 +743,16 @@
     const spotCount = model.leagues.filter(x => x.status === 'spot').length;
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
+    const attentionCount = lineupCount + spotCount + errorCount;
 
     drawWrapped('🏈 Fantasy Lineup Check v1.0.26', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
       drawWrapped(`Checked ${model.checkedAt}`, PAD, INNER_W, COLORS.muted, 400, 18, 26);
+    }
+    if (attentionCount) {
+      drawWrapped(`⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention`, PAD, INNER_W, COLORS.yellow, 700, 19, 27);
     }
 
     const summarySegments = [];
@@ -943,6 +947,7 @@
     const spotCount = model.leagues.filter(x => x.status === 'spot').length;
     const optimizedCount = model.leagues.filter(x => x.status === 'optimized').length;
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
+    const attentionCount = lineupCount + spotCount + errorCount;
 
     const allClear = !lineupCount && !spotCount && !errorCount && optimizedCount > 0;
     const counts = allClear
@@ -958,6 +963,7 @@
       `🏈 Fantasy Lineup Check v1.0.26`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
+      attentionCount ? `⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention` : '',
       counts,
       ''
     ];
