@@ -63,22 +63,6 @@ The public installer URL does not change between releases.
 
 Suggestions and bug reports are reviewed before changes are released.
 
-## Maintainer release checklist
+## Source visibility
 
-For **every checker release**, documentation updates are part of the release and should be completed at the same time:
-
-1. Update `@version` in the public and Perry userscripts and metadata files.
-2. Update `version.json`, `personal/version.json`, and `latest.txt`.
-3. Update the visible version/date and **What's New** text on the public and Perry installer pages.
-4. Update `README.md` with the current release and a short description of what changed.
-5. Update `INSTALL.md` anywhere the new release changes setup, behavior, buttons, results, troubleshooting, or update instructions.
-6. Confirm all public links and Shortcut links are still current.
-7. Let GitHub Pages finish deploying before sharing fresh installer links.
-
-**A checker update is not considered finished until the GitHub instructions match the released version.**
-
-Creator-only test Shortcut:
-
-https://www.icloud.com/shortcuts/ab546ef8217c4af0b3c37d2f57218ecc
-
-This test Shortcut is not required by public users.
+The public userscript source is intentionally visible because users install it from this public repository. Personal configurations and developer-only files are kept outside the public release.
