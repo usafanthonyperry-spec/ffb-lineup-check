@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.33 — Sep 30, 2026**
+**Current release: v1.0.34 — Sep 30, 2026**
 
 Public installer:
 
@@ -89,7 +89,7 @@ You should briefly see progress such as:
 - `🏈 Loading Fantasy Dashboard…`
 - `🏈 Checking 1 of 11: League Name`
 
-When the scan finishes, the results window opens.
+When the scan finishes, the results window opens as a near-full-screen panel in Safari, while keeping the sticky header and scrolling inside the results.
 
 # Reading the results
 
