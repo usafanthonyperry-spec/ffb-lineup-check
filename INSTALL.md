@@ -2,7 +2,7 @@
 
 This is the full setup guide for a new iPhone install.
 
-**Current release: v1.0.32 — Sep 30, 2026**
+**Current release: v1.0.33 — Sep 30, 2026**
 
 Public installer:
 
@@ -55,10 +55,11 @@ https://www.icloud.com/shortcuts/5bc97e0ba2c0430788bae3c006ec9632
 The Shortcut:
 
 1. Checks the latest published checker version.
-2. Shows that version in a notification.
+2. Passes that version into the Dashboard URL as `ffb_latest`.
 3. Opens the Fantasy Footballers Ultimate Dashboard.
-4. Passes that same version into the Dashboard URL as `ffb_latest` so the checker can show update status on screen.
-5. Lets Userscripts run the checker automatically.
+4. Lets Userscripts run the checker automatically.
+
+The Shortcut does not need to show a version notification. The checker displays version status in its sticky header.
 
 For existing Shortcut installs, the Dashboard URL action needs one one-time edit:
 
@@ -156,15 +157,17 @@ It is separate from the lineup checker. It can be used to check whether the week
 
 # Updating
 
-Every time the main Shortcut runs, it shows the **latest available FFB version**.
+Every time the main Shortcut runs, it checks the latest published version and passes that value into the checker automatically.
 
-Compare that notification with the version at the top of your checker results.
+If your installed checker is current, the sticky header shows:
 
-If the latest available version is newer, return to:
+**✓ vX.X.X current**
 
-https://usafanthonyperry-spec.github.io/ffb-lineup-check/
+If a newer release exists, the sticky header shows:
 
-and reinstall the checker.
+**⬆️ Update available — vX.X.X**
+
+Tap **Install Update** in the sticky header to open the newest public userscript in Safari and install it. You do not need to compare version numbers manually or keep a Shortcut notification action.
 
 # Quick troubleshooting
 
