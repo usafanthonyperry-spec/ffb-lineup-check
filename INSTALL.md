@@ -168,7 +168,7 @@ The card color tells you what still needs attention:
 - **Yellow** — the lineup itself matches the optimizer, but one or more Spot Starts are available.
 - **Green** — the lineup matches the optimizer and there are no Spot Starts changes to consider.
 
-The same colors are used in the shareable results image.
+The summary at the top uses the same red/yellow/green colors. Fully optimized green leagues are intentionally compact so leagues that still need action are easier to scan. The shareable results image uses the same color system and compact optimized cards.
 
 ## Optimized league
 
