@@ -362,8 +362,12 @@
     if (!syncButton) return { elapsedMs: 0, reason: 'no-sync-button' };
 
     const startedAt = Date.now();
-    const beforeCurrent = lineupFingerprint(getLineup('current'));
-    const beforeSuggested = lineupFingerprint(getLineup('optimized'));
+    const beforeCurrentLineup = getLineup('current');
+    const beforeSuggestedLineup = getLineup('optimized');
+    const beforeCurrent = lineupFingerprint(beforeCurrentLineup);
+    const beforeSuggested = lineupFingerprint(beforeSuggestedLineup);
+    const beforeCurrentCount = beforeCurrentLineup.length;
+    const beforeSuggestedCount = beforeSuggestedLineup.length;
 
     let lastCurrent = beforeCurrent;
     let lastSuggested = beforeSuggested;
@@ -391,25 +395,27 @@
 
       const currentChanged = currentFingerprint !== beforeCurrent;
       const suggestedChanged = suggestedFingerprint !== beforeSuggested;
+      const rosterCountsReady = current.length === beforeCurrentCount
+        && suggested.length === beforeSuggestedCount;
       const stableFor = now - lastDataChangeAt;
 
       // Strong signal: the actual Current lineup changed. Once the real
       // player/slot data settles, move on even if FFB leaves its button in a
       // misleading busy state.
-      if (currentChanged && stableFor >= 600 && elapsed >= 1000) {
+      if (currentChanged && rosterCountsReady && stableFor >= 600 && elapsed >= 1000) {
         return { elapsedMs: elapsed, reason: 'current-changed' };
       }
 
       // If FFB refreshed only the optimized side, let both roster fingerprints
       // settle before moving on.
-      if (suggestedChanged && stableFor >= 750 && elapsed >= 1800) {
+      if (suggestedChanged && rosterCountsReady && stableFor >= 750 && elapsed >= 1800) {
         return { elapsedMs: elapsed, reason: 'optimizer-refreshed' };
       }
 
       // Already-synced leagues may have no player changes at all. Do not wait
       // on the Sync button state forever; once both populated rosters have
       // remained stable, use a conservative capped fallback.
-      if (!currentChanged && !suggestedChanged && stableFor >= 900 && elapsed >= 4000) {
+      if (!currentChanged && !suggestedChanged && rosterCountsReady && stableFor >= 900 && elapsed >= 4000) {
         return { elapsedMs: elapsed, reason: 'stable-unchanged' };
       }
     }
@@ -621,7 +627,10 @@
     if (league.status === 'optimized') {
       return `
         <div data-ffb-status="optimized" style="margin-top:10px;padding:10px 12px;background:${COLORS.card};border:2px solid ${COLORS.green};border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <div style="font-weight:700;min-width:0;">${escapeHTML(league.league)}${league.timingMs != null ? ` <span style="color:${COLORS.muted};font-size:11px;font-weight:500;">⏱ ${escapeHTML(formatDurationMs(league.timingMs))}</span>` : ''}</div>
+          <div style="min-width:0;">
+            <div style="font-weight:700;">${escapeHTML(league.league)}${league.timingMs != null ? ` <span style="color:${COLORS.muted};font-size:11px;font-weight:500;">⏱ ${escapeHTML(formatDurationMs(league.timingMs))}</span>` : ''}</div>
+            ${league.syncReason ? `<div style="margin-top:2px;color:${COLORS.muted};font-size:11px;font-weight:500;">sync ${escapeHTML(formatDurationMs(league.syncMs))} • ${escapeHTML(syncReasonLabel(league.syncReason))}</div>` : ''}
+          </div>
           <div style="color:${COLORS.green};font-weight:700;white-space:nowrap;">✓ OPTIMIZED</div>
         </div>`;
     }
