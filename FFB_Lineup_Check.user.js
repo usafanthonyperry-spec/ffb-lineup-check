@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFB Fantasy Lineup Check
 // @namespace    local.ffb.lineupcheck
-// @version      1.0.35
+// @version      1.0.36
 // @updateURL    https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.meta.js
 // @downloadURL  https://usafanthonyperry-spec.github.io/ffb-lineup-check/FFB_Lineup_Check.user.js
 // @description  Checks every synced Fantasy Footballers Ultimate Dashboard league for lineup, FLEX/SFLEX, and Spot Starts changes and can share one full results image.
@@ -29,8 +29,10 @@
   // =========================================================
   const LEAGUE_ORDER = [];
 
-  const APP_VERSION = '1.0.35';
+  const APP_VERSION = '1.0.36';
   const HIDE_OPTIMIZED_STORAGE_KEY = 'ffb-public-hide-optimized';
+  // Real Mahomes/rings photo from WWE Raw (Apr. 29, 2024), animated locally with CSS/Web Animations.
+  const MAHOMES_LOADING_IMAGE_URL = 'https://www.wwe.com/f/styles/og_image/public/2024/04/dchiraw1614_05_ntwk--472e6fdf8d5727fbe8c6a4a3a7658810.jpg';
   const UPDATE_INSTALL_URL = 'https://usafanthonyperry-spec.github.io/ffb-lineup-check/';
   const PUBLIC_USE_COUNT_KEY = 'ffb-public-use-counted-v1';
   const PUBLIC_USE_COUNTER_URL = 'https://hits.sh/usafanthonyperry-spec.github.io/ffb-lineup-check/public-checker-use.svg?label=public%20uses&color=54d17a';
@@ -179,11 +181,13 @@
     document.body.appendChild(counter);
   }
 
-  function showBanner(message) {
+  function showBanner(message, showMahomes = false) {
     let banner = document.getElementById('ffb-check-banner');
+
     if (!banner) {
       banner = document.createElement('div');
       banner.id = 'ffb-check-banner';
+
       Object.assign(banner.style, {
         position: 'fixed',
         top: '14px',
@@ -192,19 +196,80 @@
         zIndex: '999999',
         background: COLORS.bg,
         color: COLORS.text,
+        width: '96%',
+        maxWidth: '720px',
         padding: '11px 15px',
         borderRadius: '12px',
         border: `1px solid ${COLORS.border}`,
         fontSize: '15px',
         fontWeight: '600',
-        maxWidth: '90%',
         textAlign: 'center',
         boxShadow: '0 6px 20px rgba(0,0,0,.4)',
-        fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif'
+        fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+        overflow: 'hidden'
       });
+
+      const status = document.createElement('div');
+      status.id = 'ffb-check-banner-status';
+      banner.appendChild(status);
       document.body.appendChild(banner);
     }
-    banner.textContent = message;
+
+    const status = document.getElementById('ffb-check-banner-status');
+    if (status) status.textContent = message;
+
+    if (showMahomes && !document.getElementById('ffb-mahomes-loading-track')) {
+      const track = document.createElement('div');
+      track.id = 'ffb-mahomes-loading-track';
+
+      Object.assign(track.style, {
+        position: 'relative',
+        height: '112px',
+        marginTop: '10px',
+        overflow: 'hidden',
+        borderRadius: '10px',
+        background: COLORS.card
+      });
+
+      const image = document.createElement('img');
+      image.alt = 'Patrick Mahomes with his Super Bowl rings';
+      image.src = MAHOMES_LOADING_IMAGE_URL;
+
+      Object.assign(image.style, {
+        position: 'absolute',
+        top: '6px',
+        left: '-108px',
+        width: '100px',
+        height: '100px',
+        objectFit: 'cover',
+        borderRadius: '14px',
+        border: `1px solid ${COLORS.border}`,
+        boxShadow: '0 5px 14px rgba(0,0,0,.35)'
+      });
+
+      image.onload = () => {
+        try {
+          image.animate(
+            [
+              { left: '-108px' },
+              { left: '100%' }
+            ],
+            {
+              duration: 4200,
+              iterations: Infinity,
+              easing: 'linear'
+            }
+          );
+        } catch (_) {}
+      };
+
+      image.onerror = () => {
+        track.remove();
+      };
+
+      track.appendChild(image);
+      banner.appendChild(track);
+    }
   }
 
   function removeBanner() {
@@ -744,7 +809,7 @@
     const errorCount = model.leagues.filter(x => x.status === 'error').length;
     const attentionCount = lineupCount + spotCount + errorCount;
 
-    drawWrapped('🏈 Fantasy Lineup Check v1.0.35', PAD, INNER_W, COLORS.text, 700, 30, 39);
+    drawWrapped('🏈 Fantasy Lineup Check v1.0.36', PAD, INNER_W, COLORS.text, 700, 30, 39);
     y += 6;
     drawWrapped(`${model.checkedCount} of ${model.teamCount} leagues checked`, PAD, INNER_W, COLORS.muted, 400, 21, 29);
     if (model.checkedAt) {
@@ -959,7 +1024,7 @@
         ].filter(Boolean).join(' • ');
 
     const lines = [
-      `🏈 Fantasy Lineup Check v1.0.35`,
+      `🏈 Fantasy Lineup Check v1.0.36`,
       `${model.checkedCount} of ${model.teamCount} leagues checked`,
       model.checkedAt ? `Checked ${model.checkedAt}` : '',
       attentionCount ? `⚠️ ${attentionCount} league${attentionCount === 1 ? '' : 's'} need attention` : '',
@@ -1262,7 +1327,7 @@
       }
 
       const rawLeagueName = getRawLeagueName(select);
-      showBanner(`🏈 Checking ${i + 1} of ${teamCount}: ${rawLeagueName}`);
+      showBanner(`🏈 Checking ${i + 1} of ${teamCount}: ${rawLeagueName}`, true);
 
       if (!sleeperURL) sleeperURL = getCurrentSleeperURL();
 
